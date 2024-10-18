@@ -18,11 +18,20 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,24 +46,14 @@ class MainActivity : ComponentActivity() {
 
     lateinit var wifiManager: WifiManager
     lateinit var locationManager: LocationManager
-    //var scanResultList = ArrayList<ScanResult>()
     var scanResultList = mutableListOf<ScanResult>()
-
-    //val intentFilter = IntentFilter()
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // Initialize  WiFiManager and LocationManager
-        //wifiManager = this.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
         wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
         locationManager = applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-
-        // Register a broadcast listener for SCAN_RESULTS_AVAILABLE_ACTION, which is called when scan requests are completed
-        //intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)
-        //this.applicationContext.registerReceiver(wifiScanReceiver, intentFilter)
-        //registerReceiver(wifiScanReceiver, IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION))
 
         requestNeededPermissions()
 
@@ -62,16 +61,12 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             TFGWiFiRTTTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    GreetingText(
-                        message = "Test message",
-                        from = "From David",
-                        modifier = Modifier.padding(8.dp)
-                    )
+                    Text("TEST")
+                    //AccessPointList(wifiAPs)
                 }
             }
         }
@@ -89,6 +84,7 @@ class MainActivity : ComponentActivity() {
 
                 scanResultList = wifiManager.scanResults
                 Log.d("TestDavid", scanResultList.joinToString())
+                val wifiAPs = scanResultList.map { sr -> AccessPoint(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) sr.wifiSsid.toString() else sr.SSID, sr.is80211mcResponder) }
             }
         }
 
@@ -128,37 +124,36 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun GreetingText(message: String, from: String, modifier: Modifier = Modifier) {
-    Column(
-        verticalArrangement = Arrangement.Center,
+fun AccessPointList(aps: List<AccessPoint>, modifier: Modifier = Modifier) {
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(5.dp),
         modifier = modifier
     ) {
-        Text(
-            text = message,
-            fontSize = 100.sp,
-            lineHeight = 116.sp,
-            textAlign = TextAlign.Center
-        )
-        Text(
-            text = from,
-            fontSize = 36.sp,
-            modifier = Modifier
-                .padding(16.dp)
-                .align(alignment = Alignment.End)
-        )
+        item {
+            Text("Visible Access Points")
+        }
+        items(aps) { ap ->
+            AccessPointItem(ap)
+        }
+    }
+}
+
+@Composable
+fun AccessPointItem(ap: AccessPoint, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+    ) {
+        Text("SSID :" + ap.ssid)
+        Text("Supports WiFi RTT: " + ap.isWifiRTTCompatible)
     }
 }
 
 
-@Composable
-fun AccessPointList() {
 
-}
-
-@Preview(showBackground = true)
-@Composable
-fun BirthdayCardPreview() {
-    TFGWiFiRTTTheme {
-        GreetingText(message = "Test message!", from = "From David")
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun AccessPointListPreview() {
+//    TFGWiFiRTTTheme {
+//        AccessPointList(aps = null)
+//    }
+//}
