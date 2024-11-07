@@ -50,7 +50,7 @@ interface AccessPointsRepository {
 class AccessPointsRepositoryImpl @Inject constructor(private val application: Application) : AccessPointsRepository {
     private val selectedForRTT = MutableStateFlow<Set<String>>(setOf())
     private val accessPointsList = MutableStateFlow<List<AccessPoint>>(emptyList())
-    var wifiManager: WifiManager = this.application.getSystemService(Context.WIFI_SERVICE) as WifiManager
+    var wifiManager: WifiManager = this.application.getSystemService(Context.WIFI_SERVICE) as WifiManager // Initialize WiFiManager
     var scanResultList = mutableListOf<ScanResult>()
 
     private val wifiScanReceiver = object : BroadcastReceiver() {
@@ -80,7 +80,6 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
             Log.e("TestDavid", "Starting Scanning of Access Points failed")
         }
     }
-
 
     override fun observeSelectedForRTT(): Flow<Set<String>> = selectedForRTT
 

@@ -1,18 +1,10 @@
 package com.davidperez.tfgwifirtt.ui
 
 import android.Manifest
-import android.annotation.SuppressLint
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.location.LocationManager
-import android.net.wifi.ScanResult
-import android.net.wifi.WifiManager
-import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,23 +12,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -47,27 +32,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.davidperez.tfgwifirtt.data.AccessPointsRepository
 import com.davidperez.tfgwifirtt.model.AccessPoint
 import com.davidperez.tfgwifirtt.ui.theme.TFGWiFiRTTTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    // lateinit var wifiManager: WifiManager
     private lateinit var locationManager: LocationManager
-    // var scanResultList = mutableListOf<ScanResult>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Initialize  WiFiManager and LocationManager
-        //wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        // Initialize  LocationManager
         locationManager = applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         requestNeededPermissions()
-
-        //startScanning()
 
         setContent {
             TFGWiFiRTTTheme {
@@ -80,32 +59,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-//    private fun startScanning() {
-//        val wifiScanReceiver = object : BroadcastReceiver() {
-//            @SuppressLint("MissingPermission") // Permissions are checked before starting to scan
-//            override fun onReceive(context: Context, intent: Intent) {
-//                Log.d("Test", "onReceive Called")
-//                val success = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)
-//                if (!success) {
-//                    Log.e("TestDavid", "Scanning of Access Points failed1")
-//                }
-//
-//                scanResultList = wifiManager.scanResults
-//                Log.d("TestDavid", scanResultList.joinToString())
-//                val wifiAPs = scanResultList.map { sr -> AccessPoint(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) sr.wifiSsid.toString() else sr.SSID, sr.is80211mcResponder) }
-//            }
-//        }
-//
-//        // Register a broadcast listener for SCAN_RESULTS_AVAILABLE_ACTION, which is called when scan requests are completed
-//        registerReceiver(wifiScanReceiver, IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION))
-//
-//        val success = wifiManager.startScan()
-//        if (!success) {
-//            Log.e("TestDavid", "Scanning of Access Points failed2")
-//        }
-//    }
-
 
     private fun requestNeededPermissions() {
         // check if location is enabled
@@ -137,7 +90,6 @@ fun AccessPointsListScreen(
     accessPointsViewModel: AccessPointsViewModel = viewModel()
 ) {
     // State to hold the scan results
-    //val uiState by accessPointsViewModel.uiState.collectAsStateWithLifecycle()
     val accessPointsUiState by accessPointsViewModel.uiState.collectAsState()
 
     AccessPoints(
@@ -176,7 +128,6 @@ private fun AccessPoints(
         items(accessPointsList) { ap ->
             AccessPointItem(ap)
         }
-
         item {
             OutlinedButton(
                 onClick = onStartScan,
@@ -211,7 +162,6 @@ fun AccessPointItem(ap: AccessPoint, modifier: Modifier = Modifier) {
         }
     }
 }
-
 
 
 //@Preview(showBackground = true)
