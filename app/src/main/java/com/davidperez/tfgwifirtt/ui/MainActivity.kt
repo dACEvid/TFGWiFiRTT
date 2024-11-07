@@ -17,21 +17,35 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.davidperez.tfgwifirtt.data.AccessPointsRepository
 import com.davidperez.tfgwifirtt.model.AccessPoint
@@ -140,30 +154,40 @@ private fun AccessPoints(
     onToggleSelectionForRTT: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (accessPointsList.isEmpty()) {
-        // Show scan button
-        TextButton(
-            onClick = onStartScan,
-            modifier
-                .padding(5.dp)
-                .fillMaxSize()
-        ) {
-            Text(
-                "Scan Access Points",
-                textAlign = TextAlign.Center
-            )
-        }
-    } else {
-        // Show access point list
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(5.dp),
-            modifier = Modifier.padding(16.dp)
-        ) {
+    // Show access point list
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 16.dp),
+    ) {
+        if (accessPointsList.isNotEmpty()) {
             item {
-                Text("Visible Access Points")
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Visible Access Points",
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
-            items(accessPointsList) { ap ->
-                AccessPointItem(ap)
+        }
+        items(accessPointsList) { ap ->
+            AccessPointItem(ap)
+        }
+
+        item {
+            OutlinedButton(
+                onClick = onStartScan,
+                modifier
+                    .padding(5.dp)
+                    .fillMaxSize()
+            ) {
+                Text(
+                    "Scan Access Points",
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
@@ -173,11 +197,18 @@ private fun AccessPoints(
 
 @Composable
 fun AccessPointItem(ap: AccessPoint, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
+    OutlinedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
     ) {
-        Text("SSID :" + ap.ssid)
-        Text("Supports WiFi RTT: " + ap.isWifiRTTCompatible)
+        Column(
+            modifier = Modifier.padding(10.dp)
+        ) {
+            Text("SSID: " + ap.ssid)
+            Text("BSSID: " + ap.bssid)
+            Text("Supports RTT: " + ap.isWifiRTTCompatible)
+        }
     }
 }
 

@@ -64,7 +64,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
 
             scanResultList = wifiManager.scanResults
             Log.d("TestDavid", scanResultList.joinToString())
-            accessPointsList.value = scanResultList.map { sr -> AccessPoint(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) sr.wifiSsid.toString() else sr.SSID, sr.is80211mcResponder) }
+            accessPointsList.value = scanResultList.map { sr -> AccessPoint(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) sr.wifiSsid.toString() else sr.SSID, sr.BSSID, sr.is80211mcResponder) }
         }
     }
 
