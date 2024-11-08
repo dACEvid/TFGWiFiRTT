@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.LocationManager
+import android.net.wifi.ScanResult
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -12,8 +13,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -103,7 +108,7 @@ fun AccessPointsListScreen(
 private fun AccessPoints(
     accessPointsList: List<AccessPoint>,
     onStartScan: () -> Unit,
-    onToggleSelectionForRTT: (String) -> Unit,
+    onToggleSelectionForRTT: (ScanResult) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     // Show access point list
@@ -126,7 +131,7 @@ private fun AccessPoints(
             }
         }
         items(accessPointsList) { ap ->
-            AccessPointItem(ap)
+            AccessPointItem(ap, onToggleSelectionForRTT)
         }
         item {
             OutlinedButton(
@@ -147,7 +152,7 @@ private fun AccessPoints(
 }
 
 @Composable
-fun AccessPointItem(ap: AccessPoint, modifier: Modifier = Modifier) {
+fun AccessPointItem(ap: AccessPoint, onToggleSelectionForRTT: (ScanResult) -> Unit,) {
     OutlinedCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -159,6 +164,18 @@ fun AccessPointItem(ap: AccessPoint, modifier: Modifier = Modifier) {
             Text("SSID: " + ap.ssid)
             Text("BSSID: " + ap.bssid)
             Text("Supports RTT: " + ap.isWifiRTTCompatible)
+            if (ap.isWifiRTTCompatible) {
+                Spacer(modifier = Modifier.height(20.dp))
+                Text("Select for RTT")
+                Switch(
+                    checked = ap.selectedForRTT,
+                    onCheckedChange = {
+                        ap.selectedForRTT = it
+                        onToggleSelectionForRTT(ap.scanResultObject)
+                    },
+                    enabled = true
+                )
+            }
         }
     }
 }

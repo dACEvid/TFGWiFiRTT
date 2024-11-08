@@ -1,5 +1,6 @@
 package com.davidperez.tfgwifirtt.ui
 
+import android.net.wifi.ScanResult
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.davidperez.tfgwifirtt.data.AccessPointsRepository
@@ -17,7 +18,7 @@ import javax.inject.Inject
  */
 data class AccessPointsUiState(
     val accessPointsList: List<AccessPoint> = emptyList(),
-    val selectedForRTT: Set<String> = emptySet(),
+    val selectedForRTT: Set<ScanResult> = emptySet(),
     val isLoading: Boolean = false,
     val errorMessage: String = ""
 )
@@ -35,6 +36,7 @@ class AccessPointsViewModel @Inject constructor(
     init {
         observeAccessPointsList() // Observe for changes in the scanned access points
         refreshAccessPoints() // Start scan
+        observeSelectedForRTT() // Observe for changes in the selected APs for RTT
     }
 
     private fun observeAccessPointsList() {
@@ -43,6 +45,18 @@ class AccessPointsViewModel @Inject constructor(
                 _uiState.update { currentState ->
                     currentState.copy(
                         accessPointsList = accessPointListObserved
+                    )
+                }
+            }
+        }
+    }
+
+    private fun observeSelectedForRTT() {
+        viewModelScope.launch {
+            accessPointsRepository.observeSelectedForRTT().collect { selectedForRTTObserved ->
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        selectedForRTT = selectedForRTTObserved
                     )
                 }
             }
@@ -63,9 +77,9 @@ class AccessPointsViewModel @Inject constructor(
     /**
      * Toggle selection of an access point for RTT
      */
-    fun toggleSelectionForRTT(accessPointSsid: String) {
+    fun toggleSelectionForRTT(accessPointScanResult: ScanResult) {
         viewModelScope.launch {
-            accessPointsRepository.toggleSelectionForRTT(accessPointSsid)
+            accessPointsRepository.toggleSelectionForRTT(accessPointScanResult)
         }
     }
 }

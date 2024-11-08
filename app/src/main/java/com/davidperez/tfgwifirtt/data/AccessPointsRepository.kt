@@ -34,7 +34,7 @@ interface AccessPointsRepository {
     /**
      * Observe the access points that have been selected for RTT
      */
-    fun observeSelectedForRTT(): Flow<Set<String>>
+    fun observeSelectedForRTT(): Flow<Set<ScanResult>>
 
     /**
      * Observe the access points.
@@ -44,11 +44,11 @@ interface AccessPointsRepository {
     /**
      * Toggle an access point to be selected for RTT or not.
      */
-    suspend fun toggleSelectionForRTT(accessPointSsid: String)
+    suspend fun toggleSelectionForRTT(accessPointScanResult: ScanResult)
 }
 
 class AccessPointsRepositoryImpl @Inject constructor(private val application: Application) : AccessPointsRepository {
-    private val selectedForRTT = MutableStateFlow<Set<String>>(setOf())
+    private val selectedForRTT = MutableStateFlow<Set<ScanResult>>(setOf())
     private val accessPointsList = MutableStateFlow<List<AccessPoint>>(emptyList())
     var wifiManager: WifiManager = this.application.getSystemService(Context.WIFI_SERVICE) as WifiManager // Initialize WiFiManager
     var scanResultList = mutableListOf<ScanResult>()
@@ -64,7 +64,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
 
             scanResultList = wifiManager.scanResults
             Log.d("TestDavid", scanResultList.joinToString())
-            accessPointsList.value = scanResultList.map { sr -> AccessPoint(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) sr.wifiSsid.toString() else sr.SSID, sr.BSSID, sr.is80211mcResponder) }
+            accessPointsList.value = scanResultList.map { sr -> AccessPoint(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) sr.wifiSsid.toString() else sr.SSID, sr.BSSID, sr.is80211mcResponder, sr) }
         }
     }
 
@@ -81,13 +81,13 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         }
     }
 
-    override fun observeSelectedForRTT(): Flow<Set<String>> = selectedForRTT
-
     override fun observeAccessPointsList(): Flow<List<AccessPoint>> = accessPointsList.asStateFlow()
 
-    override suspend fun toggleSelectionForRTT(accessPointSsid: String) {
+    override fun observeSelectedForRTT(): Flow<Set<ScanResult>> = selectedForRTT.asStateFlow()
+
+    override suspend fun toggleSelectionForRTT(accessPointScanResult: ScanResult) {
         selectedForRTT.update {
-            it.addOrRemove(accessPointSsid)
+            it.addOrRemove(accessPointScanResult)
         }
     }
 
