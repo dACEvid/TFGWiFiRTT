@@ -86,6 +86,12 @@ class MainActivity : ComponentActivity() {
         if (checkSelfPermission(Manifest.permission.ACCESS_WIFI_STATE) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(Manifest.permission.ACCESS_WIFI_STATE), 1)
         }
+
+        // Permission needed for performing a RTT ranging request (only for Android 13 or higher)
+        // TODO: request this at runtime when the user wants to perform the RTT ranging request
+        if (checkSelfPermission(Manifest.permission.NEARBY_WIFI_DEVICES) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(Manifest.permission.NEARBY_WIFI_DEVICES), 1)
+        }
     }
 
 }
@@ -99,16 +105,20 @@ fun AccessPointsListScreen(
 
     AccessPoints(
         accessPointsList = accessPointsUiState.accessPointsList,
+        selectedForRTT = accessPointsUiState.selectedForRTT,
         onStartScan = { accessPointsViewModel.refreshAccessPoints() },
-        onToggleSelectionForRTT = { accessPointsViewModel.toggleSelectionForRTT(it) }
+        onToggleSelectionForRTT = { accessPointsViewModel.toggleSelectionForRTT(it) },
+        onCreateRTTRangingRequest = { accessPointsViewModel.createRTTRangingRequest(it) },
     )
 }
 
 @Composable
 private fun AccessPoints(
     accessPointsList: List<AccessPoint>,
+    selectedForRTT: Set<ScanResult>,
     onStartScan: () -> Unit,
     onToggleSelectionForRTT: (ScanResult) -> Unit,
+    onCreateRTTRangingRequest: (Set<ScanResult>) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     // Show access point list
@@ -144,6 +154,21 @@ private fun AccessPoints(
                     "Scan Access Points",
                     textAlign = TextAlign.Center
                 )
+            }
+        }
+        if (selectedForRTT.isNotEmpty()) {
+            item {
+                OutlinedButton(
+                    onClick = { onCreateRTTRangingRequest(selectedForRTT) },
+                    modifier
+                        .padding(5.dp)
+                        .fillMaxSize()
+                ) {
+                    Text(
+                        "Create RTT Ranging Request",
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
     }

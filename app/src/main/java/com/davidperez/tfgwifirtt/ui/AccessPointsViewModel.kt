@@ -82,4 +82,13 @@ class AccessPointsViewModel @Inject constructor(
             accessPointsRepository.toggleSelectionForRTT(accessPointScanResult)
         }
     }
+
+    /**
+     * Create RTT ranging request for the selected APs
+     */
+    fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>) {
+        viewModelScope.launch {
+            accessPointsRepository.createRTTRangingRequest(selectedForRTT)
+        }
+    }
 }

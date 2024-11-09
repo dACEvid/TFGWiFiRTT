@@ -45,6 +45,11 @@ interface AccessPointsRepository {
      * Toggle an access point to be selected for RTT or not.
      */
     suspend fun toggleSelectionForRTT(accessPointScanResult: ScanResult)
+
+    /**
+     * Toggle an access point to be selected for RTT or not.
+     */
+    suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>)
 }
 
 class AccessPointsRepositoryImpl @Inject constructor(private val application: Application) : AccessPointsRepository {
@@ -97,6 +102,11 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
                 remove(element)
             }
         }.toSet()
+    }
+
+    override suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>) {
+        // TODO: implement logic for RTT ranging request
+        Log.d("TestDavid", "RTT Ranging Request function")
     }
 }
 
