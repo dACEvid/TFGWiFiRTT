@@ -6,8 +6,13 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.net.wifi.ScanResult
 import android.net.wifi.WifiManager
+import android.net.wifi.rtt.RangingRequest
+import android.net.wifi.rtt.RangingResult
+import android.net.wifi.rtt.RangingResultCallback
+import android.net.wifi.rtt.WifiRttManager
 import android.os.Build
 import android.util.Log
 import com.davidperez.tfgwifirtt.model.AccessPoint
@@ -47,7 +52,7 @@ interface AccessPointsRepository {
     suspend fun toggleSelectionForRTT(accessPointScanResult: ScanResult)
 
     /**
-     * Toggle an access point to be selected for RTT or not.
+     * Create RTT ranging request for the selected APs
      */
     suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>)
 }
@@ -55,13 +60,14 @@ interface AccessPointsRepository {
 class AccessPointsRepositoryImpl @Inject constructor(private val application: Application) : AccessPointsRepository {
     private val selectedForRTT = MutableStateFlow<Set<ScanResult>>(setOf())
     private val accessPointsList = MutableStateFlow<List<AccessPoint>>(emptyList())
-    var wifiManager: WifiManager = this.application.getSystemService(Context.WIFI_SERVICE) as WifiManager // Initialize WiFiManager
+    var wifiManager: WifiManager = this.application.getSystemService(Context.WIFI_SERVICE) as WifiManager // Initialize WifiManager
+    //var wifiRTTManager: WifiRttManager = this.application.getSystemService(Context.WIFI_RTT_RANGING_SERVICE) as WifiRttManager // Initialize WifiRttManager
+    lateinit var wifiRTTManager: WifiRttManager
     var scanResultList = mutableListOf<ScanResult>()
 
     private val wifiScanReceiver = object : BroadcastReceiver() {
         @SuppressLint("MissingPermission") // Permissions are checked before starting to scan
         override fun onReceive(context: Context, intent: Intent) {
-            Log.d("Test", "onReceive Called")
             val success = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)
             if (!success) {
                 Log.e("TestDavid", "Scanning of Access Points failed")
@@ -73,10 +79,21 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         }
     }
 
+    private val wifiRTTStateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (!wifiRTTManager.isAvailable) {
+                Log.e("TestDavid", "WiFi RTT is not available")
+            }
+        }
+    }
+
     init {
         // Register a broadcast listener for SCAN_RESULTS_AVAILABLE_ACTION, which is called when scan requests are completed
         this.application.registerReceiver(wifiScanReceiver, IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION))
         //ContextCompat.registerReceiver(wifiScanReceiver., wifiScanReceiver, IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION), ContextCompat.RECEIVER_NOT_EXPORTED)
+
+        // Register a broadcast listener for ACTION_WIFI_RTT_STATE_CHANGED, which is called when the availability of RTT changes
+        this.application.registerReceiver(wifiRTTStateReceiver, IntentFilter(WifiRttManager.ACTION_WIFI_RTT_STATE_CHANGED))
     }
 
     override suspend fun scanAccessPoints() {
@@ -104,9 +121,31 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         }.toSet()
     }
 
+    @SuppressLint("MissingPermission")
     override suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>) {
-        // TODO: implement logic for RTT ranging request
-        Log.d("TestDavid", "RTT Ranging Request function")
+        // Check whether the device supports WiFi RTT
+        if (!this.application.packageManager.hasSystemFeature(PackageManager.FEATURE_WIFI_RTT)) {
+            Log.e("TestDavid", "Device does not support WiFi RTT")
+            return
+        }
+        wifiRTTManager = this.application.getSystemService(Context.WIFI_RTT_RANGING_SERVICE) as WifiRttManager // Initialize WifiRttManager
+        // Create a ranging request
+        val req: RangingRequest = RangingRequest.Builder().run {
+            addAccessPoints(selectedForRTT.toList())
+            build()
+        }
+        // Request ranging
+        wifiRTTManager.startRanging(req, this.application.mainExecutor, object : RangingResultCallback() {
+            // Callback that triggers when the ranging operation completes
+            override fun onRangingResults(results: List<RangingResult>) {
+                Log.d("TestDavid", "RTT Ranging Results: $results")
+            }
+
+            // Callback that triggers when the whole ranging operation fails
+            override fun onRangingFailure(code: Int) {
+                Log.e("TestDavid", "RTT Ranging Request failed")
+            }
+        })
     }
 }
 
