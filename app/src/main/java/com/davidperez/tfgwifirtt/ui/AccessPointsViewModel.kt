@@ -19,6 +19,7 @@ import javax.inject.Inject
 data class AccessPointsUiState(
     val accessPointsList: List<AccessPoint> = emptyList(),
     val selectedForRTT: Set<ScanResult> = emptySet(),
+    val rttResultDialogText: String = "",
     val isLoading: Boolean = false,
     val errorMessage: String = ""
 )
@@ -37,6 +38,7 @@ class AccessPointsViewModel @Inject constructor(
         observeAccessPointsList() // Observe for changes in the scanned access points
         refreshAccessPoints() // Start scan
         observeSelectedForRTT() // Observe for changes in the selected APs for RTT
+        observeRTTResultDialogText()
     }
 
     private fun observeAccessPointsList() {
@@ -57,6 +59,18 @@ class AccessPointsViewModel @Inject constructor(
                 _uiState.update { currentState ->
                     currentState.copy(
                         selectedForRTT = selectedForRTTObserved
+                    )
+                }
+            }
+        }
+    }
+
+    private fun observeRTTResultDialogText() {
+        viewModelScope.launch {
+            accessPointsRepository.observeRTTResultDialogText().collect { rttResultDialogTextObserved ->
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        rttResultDialogText = rttResultDialogTextObserved
                     )
                 }
             }
@@ -89,6 +103,12 @@ class AccessPointsViewModel @Inject constructor(
     fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>) {
         viewModelScope.launch {
             accessPointsRepository.createRTTRangingRequest(selectedForRTT)
+        }
+    }
+
+    fun removeRTTResultDialog() {
+        viewModelScope.launch {
+            accessPointsRepository.removeRTTResultDialog()
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.davidperez.tfgwifirtt.data
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.app.Application
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -16,6 +17,7 @@ import android.net.wifi.rtt.WifiRttManager
 import android.os.Build
 import android.util.Log
 import com.davidperez.tfgwifirtt.model.AccessPoint
+import com.davidperez.tfgwifirtt.ui.MainActivity
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -37,14 +39,19 @@ interface AccessPointsRepository {
     suspend fun scanAccessPoints()
 
     /**
+     * Observe the access points.
+     */
+    fun observeAccessPointsList(): Flow<List<AccessPoint>>
+
+    /**
      * Observe the access points that have been selected for RTT
      */
     fun observeSelectedForRTT(): Flow<Set<ScanResult>>
 
     /**
-     * Observe the access points.
+     * Observe the message to show in the dialog that shows RTT results
      */
-    fun observeAccessPointsList(): Flow<List<AccessPoint>>
+    fun observeRTTResultDialogText(): Flow<String>
 
     /**
      * Toggle an access point to be selected for RTT or not.
@@ -55,11 +62,15 @@ interface AccessPointsRepository {
      * Create RTT ranging request for the selected APs
      */
     suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>)
+
+    suspend fun removeRTTResultDialog()
 }
 
 class AccessPointsRepositoryImpl @Inject constructor(private val application: Application) : AccessPointsRepository {
     private val selectedForRTT = MutableStateFlow<Set<ScanResult>>(setOf())
     private val accessPointsList = MutableStateFlow<List<AccessPoint>>(emptyList())
+    private val rttResultDialogText = MutableStateFlow("")
+
     var wifiManager: WifiManager = this.application.getSystemService(Context.WIFI_SERVICE) as WifiManager // Initialize WifiManager
     //var wifiRTTManager: WifiRttManager = this.application.getSystemService(Context.WIFI_RTT_RANGING_SERVICE) as WifiRttManager // Initialize WifiRttManager
     lateinit var wifiRTTManager: WifiRttManager
@@ -107,6 +118,8 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
 
     override fun observeSelectedForRTT(): Flow<Set<ScanResult>> = selectedForRTT.asStateFlow()
 
+    override fun observeRTTResultDialogText(): Flow<String> = rttResultDialogText.asStateFlow()
+
     override suspend fun toggleSelectionForRTT(accessPointScanResult: ScanResult) {
         selectedForRTT.update {
             it.addOrRemove(accessPointScanResult)
@@ -125,7 +138,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
     override suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>) {
         // Check whether the device supports WiFi RTT
         if (!this.application.packageManager.hasSystemFeature(PackageManager.FEATURE_WIFI_RTT)) {
-            Log.e("TestDavid", "Device does not support WiFi RTT")
+            rttResultDialogText.value = "Device does not support WiFi RTT"
             return
         }
         wifiRTTManager = this.application.getSystemService(Context.WIFI_RTT_RANGING_SERVICE) as WifiRttManager // Initialize WifiRttManager
@@ -138,14 +151,30 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         wifiRTTManager.startRanging(req, this.application.mainExecutor, object : RangingResultCallback() {
             // Callback that triggers when the ranging operation completes
             override fun onRangingResults(results: List<RangingResult>) {
-                Log.d("TestDavid", "RTT Ranging Results: $results")
+                val resultsStr = buildString {
+                    append("RTT Ranging Results:")
+                    for (result in results) {
+                        appendLine()
+                        if (result.status == RangingResult.STATUS_SUCCESS) {
+                            append("Status: " + result.status.toString() + " MAC: " + result.macAddress.toString() + " Distance: " + result.distanceMm.toString())
+                        } else {
+                            append("RTT failed for MAC " + result.macAddress.toString())
+                        }
+                    }
+                }
+                rttResultDialogText.value = resultsStr
+                // TODO: logic to save compatible devices
             }
 
             // Callback that triggers when the whole ranging operation fails
             override fun onRangingFailure(code: Int) {
-                Log.e("TestDavid", "RTT Ranging Request failed")
+                rttResultDialogText.value = "RTT Ranging Request failed"
             }
         })
+    }
+
+    override suspend fun removeRTTResultDialog() {
+        rttResultDialogText.value = ""
     }
 }
 
@@ -165,4 +194,6 @@ abstract class AppModule {
         accessPointsRepositoryImpl: AccessPointsRepositoryImpl
     ): AccessPointsRepository
 }
+
+
 
