@@ -20,7 +20,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.BottomNavigation
+import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -42,10 +46,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.davidperez.tfgwifirtt.model.AccessPoint
 import com.davidperez.tfgwifirtt.ui.theme.TFGWiFiRTTTheme
 import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.lifecycle.HiltViewModel
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -65,7 +78,8 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AccessPointsListScreen()
+                    //AccessPointsListScreen()
+                    MyAppNav()
                 }
             }
         }
@@ -104,8 +118,57 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+fun MyAppNav() {
+    val navController = rememberNavController() // Create NavController
+
+    val topLevelRoutes = listOf(
+        TopLevelRoute("Access Points", "accessPointsList", Icons.Default.Home),
+        TopLevelRoute("Compatible Devices", "compatibleDevicesList", Icons.Default.Info)
+    )
+
+    Scaffold(
+        bottomBar = {
+            BottomNavigation {
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentDestination = navBackStackEntry?.destination
+                topLevelRoutes.forEach { topLevelRoute ->
+                    BottomNavigationItem(
+                        icon = { Icon(topLevelRoute.icon, contentDescription = topLevelRoute.name) },
+                        label = { Text(topLevelRoute.name) },
+                        selected = currentDestination?.hierarchy?.any { it.route == topLevelRoute.route } == true,
+                        onClick = {
+                            navController.navigate(topLevelRoute.route) {
+                                // Pop up to the start destination of the graph to
+                                // avoid building up a large stack of destinations
+                                // on the back stack as users select items
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true // Avoid multiple copies of the same destination when reselecting the same item
+                                restoreState = true // Restore state when reselecting a previously selected item
+                            }
+                        }
+                    )
+                }
+            }
+        }
+    ) { innerPadding ->
+        NavHost(navController = navController, startDestination = "accessPointsList", Modifier.padding(innerPadding)) {
+            composable("accessPointsList") { AccessPointsListScreen() }
+            composable("compatibleDevicesList") { CompatibleDevicesListScreen() }
+        }
+    }
+}
+
+@Composable
+fun CompatibleDevicesListScreen(
+) {
+    Text("Hello World")
+}
+
+@Composable
 fun AccessPointsListScreen(
-    accessPointsViewModel: AccessPointsViewModel = viewModel()
+    accessPointsViewModel: AccessPointsViewModel = hiltViewModel()
 ) {
     // State to hold the scan results
     val accessPointsUiState by accessPointsViewModel.uiState.collectAsState()
@@ -202,7 +265,7 @@ fun AccessPointItem(ap: AccessPoint, onToggleSelectionForRTT: (ScanResult) -> Un
             Text("SSID: " + ap.ssid)
             Text("BSSID: " + ap.bssid)
             Text("Supports RTT: " + ap.isWifiRTTCompatible)
-            if (ap.isWifiRTTCompatible) {
+            if (!ap.isWifiRTTCompatible) {
                 Spacer(modifier = Modifier.height(20.dp))
                 Text("Select for RTT")
                 Switch(
@@ -270,4 +333,5 @@ fun RTTResultDialog(
 //    }
 //}
 
+data class TopLevelRoute(val name: String, val route: String, val icon: ImageVector)
 

@@ -152,7 +152,6 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
             // Callback that triggers when the ranging operation completes
             override fun onRangingResults(results: List<RangingResult>) {
                 val resultsStr = buildString {
-                    append("RTT Ranging Results:")
                     for (result in results) {
                         appendLine()
                         if (result.status == RangingResult.STATUS_SUCCESS) {
