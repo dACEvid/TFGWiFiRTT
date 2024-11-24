@@ -78,7 +78,6 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    //AccessPointsListScreen()
                     MyAppNav()
                 }
             }
@@ -138,9 +137,7 @@ fun MyAppNav() {
                         selected = currentDestination?.hierarchy?.any { it.route == topLevelRoute.route } == true,
                         onClick = {
                             navController.navigate(topLevelRoute.route) {
-                                // Pop up to the start destination of the graph to
-                                // avoid building up a large stack of destinations
-                                // on the back stack as users select items
+                                // Pop up to the start destination of the graph to avoid building up a large stack of destinations on the back stack as users select items
                                 popUpTo(navController.graph.findStartDestination().id) {
                                     saveState = true
                                 }
@@ -265,7 +262,7 @@ fun AccessPointItem(ap: AccessPoint, onToggleSelectionForRTT: (ScanResult) -> Un
             Text("SSID: " + ap.ssid)
             Text("BSSID: " + ap.bssid)
             Text("Supports RTT: " + ap.isWifiRTTCompatible)
-            if (!ap.isWifiRTTCompatible) {
+            if (ap.isWifiRTTCompatible) {
                 Spacer(modifier = Modifier.height(20.dp))
                 Text("Select for RTT")
                 Switch(
