@@ -41,6 +41,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -55,6 +56,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.room.Room
+import com.davidperez.tfgwifirtt.data.AppDatabase
 import com.davidperez.tfgwifirtt.model.AccessPoint
 import com.davidperez.tfgwifirtt.ui.theme.TFGWiFiRTTTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -66,6 +69,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Initialize Room database instance
+        val db = Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java, "rtt-db"
+        ).build()
 
         // Initialize  LocationManager
         locationManager = applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -133,8 +142,10 @@ fun MyAppNav() {
                 topLevelRoutes.forEach { topLevelRoute ->
                     BottomNavigationItem(
                         icon = { Icon(topLevelRoute.icon, contentDescription = topLevelRoute.name) },
+                        selectedContentColor = Color.White,
+                        unselectedContentColor = Color.Gray,
                         label = { Text(topLevelRoute.name) },
-                        selected = currentDestination?.hierarchy?.any { it.route == topLevelRoute.route } == true,
+                        selected = currentDestination?.route == topLevelRoute.route,
                         onClick = {
                             navController.navigate(topLevelRoute.route) {
                                 // Pop up to the start destination of the graph to avoid building up a large stack of destinations on the back stack as users select items
