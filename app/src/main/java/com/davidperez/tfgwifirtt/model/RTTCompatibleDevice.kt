@@ -1,13 +1,10 @@
 package com.davidperez.tfgwifirtt.model
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import com.google.firebase.firestore.PropertyName
 
-@Entity(tableName = "rtt_compatible_devices")
 data class RTTCompatibleDevice(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    @ColumnInfo(name = "model") val model: String,
-    @ColumnInfo(name = "manufacturer") val manufacturer: String,
-    @ColumnInfo(name = "android_version") val androidVersion: String
+    val id: Int = 0,
+    val model: String = "00testmod00",
+    val manufacturer: String = "00testman00",
+    val androidVersion: String = "00testver00"
 )

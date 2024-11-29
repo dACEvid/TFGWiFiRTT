@@ -1,7 +1,6 @@
 package com.davidperez.tfgwifirtt.data
 
 import android.annotation.SuppressLint
-import android.app.AlertDialog
 import android.app.Application
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -17,7 +16,6 @@ import android.net.wifi.rtt.WifiRttManager
 import android.os.Build
 import android.util.Log
 import com.davidperez.tfgwifirtt.model.AccessPoint
-import com.davidperez.tfgwifirtt.ui.MainActivity
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

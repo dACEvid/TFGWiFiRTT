@@ -48,20 +48,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.room.Room
-import com.davidperez.tfgwifirtt.data.AppDatabase
 import com.davidperez.tfgwifirtt.model.AccessPoint
+import com.davidperez.tfgwifirtt.model.RTTCompatibleDevice
 import com.davidperez.tfgwifirtt.ui.theme.TFGWiFiRTTTheme
 import dagger.hilt.android.AndroidEntryPoint
-import dagger.hilt.android.lifecycle.HiltViewModel
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -69,12 +64,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Initialize Room database instance
-        val db = Room.databaseBuilder(
-            applicationContext,
-            AppDatabase::class.java, "rtt-db"
-        ).build()
 
         // Initialize  LocationManager
         locationManager = applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -152,8 +141,8 @@ fun MyAppNav() {
                                 popUpTo(navController.graph.findStartDestination().id) {
                                     saveState = true
                                 }
-                                launchSingleTop = true // Avoid multiple copies of the same destination when reselecting the same item
-                                restoreState = true // Restore state when reselecting a previously selected item
+                                launchSingleTop = true // Avoid multiple copies of the same destination when re-selecting the same item
+                                restoreState = true // Restore state when re-selecting a previously selected item
                             }
                         }
                     )
@@ -170,8 +159,47 @@ fun MyAppNav() {
 
 @Composable
 fun CompatibleDevicesListScreen(
+    rttCompatibleDevicesViewModel: RTTCompatibleDevicesViewModel = hiltViewModel()
 ) {
-    Text("Hello World")
+    val rttCompatibleDevicesUiState by rttCompatibleDevicesViewModel.uiState.collectAsState()
+
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 16.dp),
+    ) {
+        item {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "RTT-compatible Devices",
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+        items(rttCompatibleDevicesUiState.rttCompatibleDevicesList) { cd ->
+            CompatibleDeviceItem(cd)
+        }
+    }
+}
+
+@Composable
+fun CompatibleDeviceItem(cd: RTTCompatibleDevice) {
+    OutlinedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(10.dp)
+        ) {
+            Text("Manufacturer: " + cd.manufacturer)
+            Text("Model: " + cd.model)
+            Text("Android Version: " + cd.androidVersion)
+        }
+    }
 }
 
 @Composable
@@ -261,7 +289,7 @@ private fun AccessPoints(
 }
 
 @Composable
-fun AccessPointItem(ap: AccessPoint, onToggleSelectionForRTT: (ScanResult) -> Unit,) {
+fun AccessPointItem(ap: AccessPoint, onToggleSelectionForRTT: (ScanResult) -> Unit) {
     OutlinedCard(
         modifier = Modifier
             .fillMaxWidth()
