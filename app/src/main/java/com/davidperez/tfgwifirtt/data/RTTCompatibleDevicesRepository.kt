@@ -14,23 +14,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
-//@Dao
-//interface RTTCompatibleDeviceDao {
-//    @Query("SELECT * FROM rtt_compatible_devices")
-//    fun getAll(): Flow<List<RTTCompatibleDevice>>
-//
-//    @Query("SELECT * FROM rtt_compatible_devices WHERE model LIKE :model")
-//    fun getByModel(model: String): RTTCompatibleDevice
-//
-//    @Insert
-//    fun insert(devices: RTTCompatibleDevice)
-//
-//    @Query("DELETE FROM rtt_compatible_devices")
-//    suspend fun deleteAll()
-//}
-
 /**
- * Interface to the Access Points data layer.
+ * Interface to the RTT-compatible Devices data layer.
  */
 interface RTTCompatibleDevicesRepository {
 
@@ -70,24 +55,3 @@ abstract class RepositoryModule {
     @Binds
     abstract fun bindRepository(impl: RTTCompatibleDevicesRepositoryImpl): RTTCompatibleDevicesRepository
 }
-
-//@Module
-//@InstallIn(SingletonComponent::class)
-//object DatabaseModule {
-//
-//    @Singleton // https://stackoverflow.com/questions/63146318/how-to-create-and-use-a-room-database-in-kotlin-dagger-hilt
-//    @Provides
-//    fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
-//        return Room.databaseBuilder(
-//            context,
-//            AppDatabase::class.java,
-//            "rtt_db"
-//        ).build()
-//    }
-//
-//    @Singleton
-//    @Provides
-//    fun provideRTTCompatibleDeviceDao(database: AppDatabase): RTTCompatibleDeviceDao {
-//        return database.rttCompatibleDeviceDao()
-//    }
-//}

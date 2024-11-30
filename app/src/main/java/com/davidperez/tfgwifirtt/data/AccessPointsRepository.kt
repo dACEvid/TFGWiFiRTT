@@ -16,6 +16,9 @@ import android.net.wifi.rtt.WifiRttManager
 import android.os.Build
 import android.util.Log
 import com.davidperez.tfgwifirtt.model.AccessPoint
+import com.davidperez.tfgwifirtt.model.RTTCompatibleDevice
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -138,7 +141,10 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         if (!this.application.packageManager.hasSystemFeature(PackageManager.FEATURE_WIFI_RTT)) {
             rttResultDialogText.value = "Device does not support WiFi RTT"
             return
+        } else {
+            addDeviceToFirestore()
         }
+
         wifiRTTManager = this.application.getSystemService(Context.WIFI_RTT_RANGING_SERVICE) as WifiRttManager // Initialize WifiRttManager
         // Create a ranging request
         val req: RangingRequest = RangingRequest.Builder().run {
@@ -160,7 +166,6 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
                     }
                 }
                 rttResultDialogText.value = resultsStr
-                // TODO: logic to save compatible devices
             }
 
             // Callback that triggers when the whole ranging operation fails
@@ -172,6 +177,25 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
 
     override suspend fun removeRTTResultDialog() {
         rttResultDialogText.value = ""
+    }
+
+    private fun addDeviceToFirestore() {
+        val db = Firebase.firestore
+        val device = RTTCompatibleDevice(
+            id = System.currentTimeMillis().toInt(),
+            model = Build.MODEL,
+            manufacturer = Build.MANUFACTURER,
+            androidVersion = Build.VERSION.RELEASE
+        )
+
+        db.collection("compatible-devices")
+            .add(device)
+            .addOnSuccessListener { documentReference ->
+                Log.d("TestDavid", "Device successfully added with ID: ${documentReference.id}")
+            }
+            .addOnFailureListener { e ->
+                Log.e("TestDavid", "Error adding device to Firestore", e)
+            }
     }
 }
 
