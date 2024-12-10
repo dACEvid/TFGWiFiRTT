@@ -142,7 +142,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
             rttResultDialogText.value = "Device does not support WiFi RTT"
             return
         } else {
-            addDeviceToFirestore()
+            saveCompatibleDevice()
         }
 
         wifiRTTManager = this.application.getSystemService(Context.WIFI_RTT_RANGING_SERVICE) as WifiRttManager // Initialize WifiRttManager
@@ -179,23 +179,35 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         rttResultDialogText.value = ""
     }
 
-    private fun addDeviceToFirestore() {
+    private fun saveCompatibleDevice() {
+        // The device information will be stored in Firestore
         val db = Firebase.firestore
         val device = RTTCompatibleDevice(
-            id = System.currentTimeMillis().toInt(),
+            lastChecked = System.currentTimeMillis().toInt(),
             model = Build.MODEL,
             manufacturer = Build.MANUFACTURER,
             androidVersion = Build.VERSION.RELEASE
         )
 
+        val compositeId = "${device.manufacturer}-${device.model}-${device.androidVersion}"
         db.collection("compatible-devices")
-            .add(device)
-            .addOnSuccessListener { documentReference ->
-                Log.d("TestDavid", "Device successfully added with ID: ${documentReference.id}")
+            .document(compositeId)
+            .set(device)
+            .addOnSuccessListener {
+                Log.d("TestDavid", "Device added with composite ID: $compositeId")
             }
             .addOnFailureListener { e ->
                 Log.e("TestDavid", "Error adding device to Firestore", e)
             }
+
+//        db.collection("compatible-devices")
+//            .add(device)
+//            .addOnSuccessListener { documentReference ->
+//                Log.d("TestDavid", "Device successfully added with ID: ${documentReference.id}")
+//            }
+//            .addOnFailureListener { e ->
+//                Log.e("TestDavid", "Error adding device to Firestore", e)
+//            }
     }
 }
 
