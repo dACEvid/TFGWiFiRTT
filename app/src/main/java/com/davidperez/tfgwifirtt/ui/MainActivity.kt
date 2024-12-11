@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.net.wifi.ScanResult
+import android.net.wifi.rtt.RangingResult
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -212,9 +213,12 @@ fun AccessPointsListScreen(
     AccessPoints(
         accessPointsList = accessPointsUiState.accessPointsList,
         selectedForRTT = accessPointsUiState.selectedForRTT,
+        rttRangingResults = accessPointsUiState.rttRangingResults,
         onStartScan = { accessPointsViewModel.refreshAccessPoints() },
         onToggleSelectionForRTT = { accessPointsViewModel.toggleSelectionForRTT(it) },
         onCreateRTTRangingRequest = { accessPointsViewModel.createRTTRangingRequest(it) },
+        onDoContinuousRTTRanging = { accessPointsViewModel.doContinuousRTTRanging(it) },
+        onExportRTTRangingResultsToCsv = { accessPointsViewModel.exportRTTRangingResultsToCsv(it) },
     )
     
     RTTResultDialog(
@@ -228,9 +232,12 @@ fun AccessPointsListScreen(
 private fun AccessPoints(
     accessPointsList: List<AccessPoint>,
     selectedForRTT: Set<ScanResult>,
+    rttRangingResults: List<RangingResult>,
     onStartScan: () -> Unit,
     onToggleSelectionForRTT: (ScanResult) -> Unit,
     onCreateRTTRangingRequest: (Set<ScanResult>) -> Unit,
+    onDoContinuousRTTRanging: (Set<ScanResult>) -> Unit,
+    onExportRTTRangingResultsToCsv: (List<RangingResult>) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     // Show access point list
@@ -255,19 +262,6 @@ private fun AccessPoints(
         items(accessPointsList) { ap ->
             AccessPointItem(ap, onToggleSelectionForRTT)
         }
-        item {
-            OutlinedButton(
-                onClick = onStartScan,
-                modifier
-                    .padding(5.dp)
-                    .fillMaxSize()
-            ) {
-                Text(
-                    "Scan Access Points",
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
         if (selectedForRTT.isNotEmpty()) {
             item {
                 OutlinedButton(
@@ -281,6 +275,47 @@ private fun AccessPoints(
                         textAlign = TextAlign.Center
                     )
                 }
+            }
+            item {
+                OutlinedButton(
+                    onClick = { onDoContinuousRTTRanging(selectedForRTT) },
+                    modifier
+                        .padding(5.dp)
+                        .fillMaxSize()
+                ) {
+                    Text(
+                        "Continuous RTT Ranging (10 sec)",
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+        if (rttRangingResults.isNotEmpty()) {
+            item {
+                OutlinedButton(
+                    onClick = { onExportRTTRangingResultsToCsv(rttRangingResults) },
+                    modifier
+                        .padding(5.dp)
+                        .fillMaxSize()
+                ) {
+                    Text(
+                        "Export RTT results to CSV",
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+        item {
+            OutlinedButton(
+                onClick = onStartScan,
+                modifier
+                    .padding(5.dp)
+                    .fillMaxSize()
+            ) {
+                Text(
+                    "Scan Access Points",
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
@@ -301,7 +336,7 @@ fun AccessPointItem(ap: AccessPoint, onToggleSelectionForRTT: (ScanResult) -> Un
             Text("SSID: " + ap.ssid)
             Text("BSSID: " + ap.bssid)
             Text("Supports RTT: " + ap.isWifiRTTCompatible)
-            if (ap.isWifiRTTCompatible) {
+            if (!ap.isWifiRTTCompatible) {
                 Spacer(modifier = Modifier.height(20.dp))
                 Text("Select for RTT")
                 Switch(

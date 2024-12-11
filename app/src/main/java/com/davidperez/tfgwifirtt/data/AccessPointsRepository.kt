@@ -23,6 +23,7 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -50,6 +51,11 @@ interface AccessPointsRepository {
     fun observeSelectedForRTT(): Flow<Set<ScanResult>>
 
     /**
+     * Observe the access points that have been selected for RTT
+     */
+    fun observeRTTRangingResults(): Flow<List<RangingResult>>
+
+    /**
      * Observe the message to show in the dialog that shows RTT results
      */
     fun observeRTTResultDialogText(): Flow<String>
@@ -64,12 +70,20 @@ interface AccessPointsRepository {
      */
     suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>)
 
+    suspend fun doContinuousRTTRanging(selectedForRTT: Set<ScanResult>, duration: Long, delay: Long)
+
+    /**
+     * Export RTT ranging request results to CSV
+     */
+    suspend fun exportRTTRangingResultsToCsv(rttRangingResults: List<RangingResult>)
+
     suspend fun removeRTTResultDialog()
 }
 
 class AccessPointsRepositoryImpl @Inject constructor(private val application: Application) : AccessPointsRepository {
     private val selectedForRTT = MutableStateFlow<Set<ScanResult>>(setOf())
     private val accessPointsList = MutableStateFlow<List<AccessPoint>>(emptyList())
+    private val rttRangingResults = MutableStateFlow<List<RangingResult>>(emptyList())
     private val rttResultDialogText = MutableStateFlow("")
 
     var wifiManager: WifiManager = this.application.getSystemService(Context.WIFI_SERVICE) as WifiManager // Initialize WifiManager
@@ -119,6 +133,8 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
 
     override fun observeSelectedForRTT(): Flow<Set<ScanResult>> = selectedForRTT.asStateFlow()
 
+    override fun observeRTTRangingResults(): Flow<List<RangingResult>> = rttRangingResults.asStateFlow()
+
     override fun observeRTTResultDialogText(): Flow<String> = rttResultDialogText.asStateFlow()
 
     override suspend fun toggleSelectionForRTT(accessPointScanResult: ScanResult) {
@@ -136,7 +152,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
     }
 
     @SuppressLint("MissingPermission")
-    override suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>) {
+        override suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>) {
         // Check whether the device supports WiFi RTT
         if (!this.application.packageManager.hasSystemFeature(PackageManager.FEATURE_WIFI_RTT)) {
             rttResultDialogText.value = "Device does not support WiFi RTT"
@@ -155,11 +171,13 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         wifiRTTManager.startRanging(req, this.application.mainExecutor, object : RangingResultCallback() {
             // Callback that triggers when the ranging operation completes
             override fun onRangingResults(results: List<RangingResult>) {
+                //rttRangingResults.value = rttRangingResults.value + results
+                rttRangingResults.update { it + results }
                 val resultsStr = buildString {
                     for (result in results) {
                         appendLine()
                         if (result.status == RangingResult.STATUS_SUCCESS) {
-                            append("Status: " + result.status.toString() + " MAC: " + result.macAddress.toString() + " Distance: " + result.distanceMm.toString())
+                            append("Status: " + result.status.toString() + " MAC: " + result.macAddress.toString() + " Distance (mm): " + result.distanceMm.toString() + " Std Dev (mm): " + result.distanceStdDevMm.toString())
                         } else {
                             append("RTT failed for MAC " + result.macAddress.toString())
                         }
@@ -173,6 +191,23 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
                 rttResultDialogText.value = "RTT Ranging Request failed"
             }
         })
+    }
+
+    override suspend fun doContinuousRTTRanging(selectedForRTT: Set<ScanResult>, duration: Long, delay: Long) {
+        // We could first empty rttRangingResults... but let's keep everything for now
+
+        val endTime = System.currentTimeMillis() + duration
+        while (System.currentTimeMillis() < endTime) {
+            createRTTRangingRequest(selectedForRTT)
+            delay(delay) // Delay between requests
+        }
+        // TODO: maybe offer user to download CSV?
+        rttResultDialogText.value = "Continuous RTT Ranging finished"
+    }
+
+    override suspend fun exportRTTRangingResultsToCsv(rttRangingResults: List<RangingResult>) {
+        rttResultDialogText.value = rttRangingResults.toString()
+        // TODO: implement export to CSV
     }
 
     override suspend fun removeRTTResultDialog() {

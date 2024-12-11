@@ -1,11 +1,13 @@
 package com.davidperez.tfgwifirtt.ui
 
 import android.net.wifi.ScanResult
+import android.net.wifi.rtt.RangingResult
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.davidperez.tfgwifirtt.data.AccessPointsRepository
 import com.davidperez.tfgwifirtt.model.AccessPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,6 +21,7 @@ import javax.inject.Inject
 data class AccessPointsUiState(
     val accessPointsList: List<AccessPoint> = emptyList(),
     val selectedForRTT: Set<ScanResult> = emptySet(),
+    val rttRangingResults: List<RangingResult> = emptyList(),
     val rttResultDialogText: String = "",
     val isLoading: Boolean = false,
     val errorMessage: String = ""
@@ -38,6 +41,7 @@ class AccessPointsViewModel @Inject constructor(
         observeAccessPointsList() // Observe for changes in the scanned access points
         refreshAccessPoints() // Start scan
         observeSelectedForRTT() // Observe for changes in the selected APs for RTT
+        observeRTTRangingResults()
         observeRTTResultDialogText()
     }
 
@@ -59,6 +63,18 @@ class AccessPointsViewModel @Inject constructor(
                 _uiState.update { currentState ->
                     currentState.copy(
                         selectedForRTT = selectedForRTTObserved
+                    )
+                }
+            }
+        }
+    }
+
+    private fun observeRTTRangingResults() {
+        viewModelScope.launch {
+            accessPointsRepository.observeRTTRangingResults().collect { rttRangingResultsObserved ->
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        rttRangingResults = rttRangingResultsObserved
                     )
                 }
             }
@@ -103,6 +119,18 @@ class AccessPointsViewModel @Inject constructor(
     fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>) {
         viewModelScope.launch {
             accessPointsRepository.createRTTRangingRequest(selectedForRTT)
+        }
+    }
+
+    fun doContinuousRTTRanging(selectedForRTT: Set<ScanResult>) {
+        viewModelScope.launch {
+            accessPointsRepository.doContinuousRTTRanging(selectedForRTT, 20000, 500) // Ranging time hardcoded to 20 seconds and intervals to 0.5 seconds
+        }
+    }
+
+    fun exportRTTRangingResultsToCsv(rttRangingResults: List<RangingResult>) {
+        viewModelScope.launch {
+            accessPointsRepository.exportRTTRangingResultsToCsv(rttRangingResults)
         }
     }
 
