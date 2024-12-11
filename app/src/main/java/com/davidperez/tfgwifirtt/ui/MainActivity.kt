@@ -284,7 +284,7 @@ private fun AccessPoints(
                         .fillMaxSize()
                 ) {
                     Text(
-                        "Continuous RTT Ranging (10 sec)",
+                        "Continuous RTT Ranging (20 sec)",
                         textAlign = TextAlign.Center
                     )
                 }
@@ -336,7 +336,7 @@ fun AccessPointItem(ap: AccessPoint, onToggleSelectionForRTT: (ScanResult) -> Un
             Text("SSID: " + ap.ssid)
             Text("BSSID: " + ap.bssid)
             Text("Supports RTT: " + ap.isWifiRTTCompatible)
-            if (!ap.isWifiRTTCompatible) {
+            if (ap.isWifiRTTCompatible) {
                 Spacer(modifier = Modifier.height(20.dp))
                 Text("Select for RTT")
                 Switch(
