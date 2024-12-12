@@ -1,7 +1,9 @@
 package com.davidperez.tfgwifirtt.ui
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.net.wifi.ScanResult
@@ -9,7 +11,11 @@ import android.net.wifi.rtt.RangingResult
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -111,7 +118,6 @@ class MainActivity : ComponentActivity() {
             requestPermissions(arrayOf(Manifest.permission.NEARBY_WIFI_DEVICES), 1)
         }
     }
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -237,9 +243,23 @@ private fun AccessPoints(
     onToggleSelectionForRTT: (ScanResult) -> Unit,
     onCreateRTTRangingRequest: (Set<ScanResult>) -> Unit,
     onDoContinuousRTTRanging: (Set<ScanResult>) -> Unit,
-    onExportRTTRangingResultsToCsv: (List<RangingResult>) -> Unit,
+    onExportRTTRangingResultsToCsv: (List<RangingResult>) -> String,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/csv"),
+        onResult = { uri ->
+            uri?.let {
+                context.contentResolver.openOutputStream(it)?.use { outputStream ->
+                    val csvContent = onExportRTTRangingResultsToCsv(rttRangingResults)
+                    outputStream.write(csvContent.toByteArray())
+                }
+            }
+        }
+    )
+
     // Show access point list
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -293,7 +313,7 @@ private fun AccessPoints(
         if (rttRangingResults.isNotEmpty()) {
             item {
                 OutlinedButton(
-                    onClick = { onExportRTTRangingResultsToCsv(rttRangingResults) },
+                    onClick = { launcher.launch("rtt_ranging_results_${System.currentTimeMillis()}.csv") },
                     modifier
                         .padding(5.dp)
                         .fillMaxSize()

@@ -1,7 +1,13 @@
 package com.davidperez.tfgwifirtt.ui
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.net.wifi.ScanResult
 import android.net.wifi.rtt.RangingResult
+import android.os.Build
+import androidx.activity.result.ActivityResultLauncher
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.davidperez.tfgwifirtt.data.AccessPointsRepository
@@ -128,10 +134,18 @@ class AccessPointsViewModel @Inject constructor(
         }
     }
 
-    fun exportRTTRangingResultsToCsv(rttRangingResults: List<RangingResult>) {
-        viewModelScope.launch {
-            accessPointsRepository.exportRTTRangingResultsToCsv(rttRangingResults)
+    fun exportRTTRangingResultsToCsv(rttRangingResults: List<RangingResult>): String {
+        val csvContent = buildString {
+            appendLine("Timestamp,Device,Android Version,AP MAC Address,Status,Distance (mm),Std Dev (mm),Attempted Measurements,Successful Measurements,Bandwidth,Frequency (MHz)")
+            for (result in rttRangingResults) {
+                if (result.status == RangingResult.STATUS_SUCCESS) {
+                    appendLine("${result.rangingTimestampMillis},${Build.MANUFACTURER + Build.MODEL},${Build.VERSION.RELEASE},${result.macAddress.toString()},${result.status},${result.distanceMm},${result.distanceStdDevMm},${result.numAttemptedMeasurements},${result.numSuccessfulMeasurements}")
+                } else {
+                    appendLine(",${Build.MANUFACTURER + Build.MODEL},${Build.VERSION.RELEASE},${result.macAddress.toString()},${result.status},,,,")
+                }
+            }
         }
+        return csvContent
     }
 
     fun removeRTTResultDialog() {

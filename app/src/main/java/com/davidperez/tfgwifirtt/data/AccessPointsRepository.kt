@@ -51,7 +51,7 @@ interface AccessPointsRepository {
     fun observeSelectedForRTT(): Flow<Set<ScanResult>>
 
     /**
-     * Observe the access points that have been selected for RTT
+     * Observe the results of the RTT Ranging Requests
      */
     fun observeRTTRangingResults(): Flow<List<RangingResult>>
 
@@ -71,11 +71,6 @@ interface AccessPointsRepository {
     suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>)
 
     suspend fun doContinuousRTTRanging(selectedForRTT: Set<ScanResult>, duration: Long, delay: Long)
-
-    /**
-     * Export RTT ranging request results to CSV
-     */
-    suspend fun exportRTTRangingResultsToCsv(rttRangingResults: List<RangingResult>)
 
     suspend fun removeRTTResultDialog()
 }
@@ -116,7 +111,6 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
     init {
         // Register a broadcast listener for SCAN_RESULTS_AVAILABLE_ACTION, which is called when scan requests are completed
         this.application.registerReceiver(wifiScanReceiver, IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION))
-        //ContextCompat.registerReceiver(wifiScanReceiver., wifiScanReceiver, IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION), ContextCompat.RECEIVER_NOT_EXPORTED)
 
         // Register a broadcast listener for ACTION_WIFI_RTT_STATE_CHANGED, which is called when the availability of RTT changes
         this.application.registerReceiver(wifiRTTStateReceiver, IntentFilter(WifiRttManager.ACTION_WIFI_RTT_STATE_CHANGED))
@@ -171,7 +165,6 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         wifiRTTManager.startRanging(req, this.application.mainExecutor, object : RangingResultCallback() {
             // Callback that triggers when the ranging operation completes
             override fun onRangingResults(results: List<RangingResult>) {
-                //rttRangingResults.value = rttRangingResults.value + results
                 rttRangingResults.update { it + results }
                 val resultsStr = buildString {
                     for (result in results) {
@@ -203,11 +196,6 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         }
         // TODO: maybe offer user to download CSV?
         rttResultDialogText.value = "Continuous RTT Ranging finished"
-    }
-
-    override suspend fun exportRTTRangingResultsToCsv(rttRangingResults: List<RangingResult>) {
-        rttResultDialogText.value = rttRangingResults.toString()
-        // TODO: implement export to CSV
     }
 
     override suspend fun removeRTTResultDialog() {
