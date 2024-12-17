@@ -9,7 +9,10 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
@@ -27,6 +30,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -96,22 +103,23 @@ fun MyAppNav() {
 
     val topLevelRoutes = listOf(
         TopLevelRoute("Access Points", "accessPointsList", Icons.Default.Home),
-        TopLevelRoute("Compatible Devices", "compatibleDevicesList", Icons.Default.Info),
-        TopLevelRoute("Settings", "settings", Icons.Default.Settings)
+        TopLevelRoute("RTT-capable Devices", "compatibleDevicesList", Icons.Default.Info),
+        TopLevelRoute("User Preferences", "settings", Icons.Default.Settings)
     )
 
     Scaffold(
         bottomBar = {
-            BottomNavigation {
+            BottomNavigation(modifier = Modifier.height(80.dp)) {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
                 topLevelRoutes.forEach { topLevelRoute ->
+                    val isSelected = currentDestination?.route == topLevelRoute.route
                     BottomNavigationItem(
-                        icon = { Icon(topLevelRoute.icon, contentDescription = topLevelRoute.name) },
-                        selectedContentColor = Color.White,
+                        icon = { Icon(topLevelRoute.icon, contentDescription = topLevelRoute.name, tint = if (isSelected) Color.White else Color.Gray) },
+                        selectedContentColor = Color.Gray,
                         unselectedContentColor = Color.Gray,
-                        label = { Text(topLevelRoute.name) },
-                        selected = currentDestination?.route == topLevelRoute.route,
+                        label = { Text(topLevelRoute.name, color = if (isSelected) Color.White else Color.Gray, textAlign = TextAlign.Center, lineHeight = 16.sp) },
+                        selected = isSelected,
                         onClick = {
                             navController.navigate(topLevelRoute.route) {
                                 // Pop up to the start destination of the graph to avoid building up a large stack of destinations on the back stack as users select items
@@ -121,7 +129,8 @@ fun MyAppNav() {
                                 launchSingleTop = true // Avoid multiple copies of the same destination when re-selecting the same item
                                 restoreState = true // Restore state when re-selecting a previously selected item
                             }
-                        }
+                        },
+                        modifier = Modifier.padding(top = 10.dp)
                     )
                 }
             }
