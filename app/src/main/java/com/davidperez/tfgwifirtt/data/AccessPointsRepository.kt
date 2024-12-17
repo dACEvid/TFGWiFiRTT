@@ -68,9 +68,9 @@ interface AccessPointsRepository {
     /**
      * Create RTT ranging request for the selected APs
      */
-    suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>)
+    suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>, saveRttResults: Boolean)
 
-    suspend fun startRTTRanging(selectedForRTT: Set<ScanResult>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long)
+    suspend fun startRTTRanging(selectedForRTT: Set<ScanResult>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean)
 
     suspend fun removeRTTResultDialog()
 }
@@ -146,15 +146,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
     }
 
     @SuppressLint("MissingPermission")
-        override suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>) {
-        // Check whether the device supports WiFi RTT
-        if (!this.application.packageManager.hasSystemFeature(PackageManager.FEATURE_WIFI_RTT)) {
-            rttResultDialogText.value = "Device does not support WiFi RTT"
-            return
-        } else {
-            saveCompatibleDevice()
-        }
-
+    override suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>, saveRttResults: Boolean) {
         wifiRTTManager = this.application.getSystemService(Context.WIFI_RTT_RANGING_SERVICE) as WifiRttManager // Initialize WifiRttManager
         // Create a ranging request
         val req: RangingRequest = RangingRequest.Builder().run {
@@ -165,7 +157,9 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         wifiRTTManager.startRanging(req, this.application.mainExecutor, object : RangingResultCallback() {
             // Callback that triggers when the ranging operation completes
             override fun onRangingResults(results: List<RangingResult>) {
-                rttRangingResults.update { it + results }
+                if (saveRttResults) {
+                    rttRangingResults.update { it + results } // Save results to export to CSV if user setting is enabled
+                }
                 val resultsStr = buildString {
                     for (result in results) {
                         appendLine()
@@ -186,18 +180,26 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         })
     }
 
-    override suspend fun startRTTRanging(selectedForRTT: Set<ScanResult>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long) {
+    override suspend fun startRTTRanging(selectedForRTT: Set<ScanResult>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean) {
         // We could add a setting to only keep the last results for export
+
+        // Check whether the device supports WiFi RTT
+        if (!this.application.packageManager.hasSystemFeature(PackageManager.FEATURE_WIFI_RTT)) {
+            rttResultDialogText.value = "Device does not support WiFi RTT"
+            return
+        } else {
+            saveCompatibleDevice()
+        }
 
         if (performContinuousRttRanging) {
             val endTime = System.currentTimeMillis() + rttPeriod
             while (System.currentTimeMillis() < endTime) {
-                createRTTRangingRequest(selectedForRTT)
+                createRTTRangingRequest(selectedForRTT, saveRttResults)
                 delay(rttInterval) // Delay between requests
             }
             rttResultDialogText.value = "Continuous RTT Ranging finished"
         } else {
-            createRTTRangingRequest(selectedForRTT)
+            createRTTRangingRequest(selectedForRTT, saveRttResults)
         }
     }
 

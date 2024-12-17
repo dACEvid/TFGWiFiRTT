@@ -53,7 +53,7 @@ fun AccessPointsListScreen(
         rttRangingResults = accessPointsUiState.rttRangingResults,
         onStartScan = { accessPointsViewModel.refreshAccessPoints() },
         onToggleSelectionForRTT = { accessPointsViewModel.toggleSelectionForRTT(it) },
-        onStartRTTRanging = { selectedForRTT, performContinuousRttRanging, rttPeriod, rttInterval -> accessPointsViewModel.startRTTRanging(selectedForRTT, performContinuousRttRanging, rttPeriod, rttInterval) },
+        onStartRTTRanging = { selectedForRTT, performContinuousRttRanging, rttPeriod, rttInterval, saveRttResults -> accessPointsViewModel.startRTTRanging(selectedForRTT, performContinuousRttRanging, rttPeriod, rttInterval, saveRttResults) },
         onExportRTTRangingResultsToCsv = { accessPointsViewModel.exportRTTRangingResultsToCsv(it) },
         userSettings = accessPointsUiState.userSettings
     )
@@ -72,7 +72,7 @@ private fun AccessPoints(
     rttRangingResults: List<RangingResult>,
     onStartScan: () -> Unit,
     onToggleSelectionForRTT: (ScanResult) -> Unit,
-    onStartRTTRanging: (Set<ScanResult>, Boolean, Long, Long) -> Unit,
+    onStartRTTRanging: (Set<ScanResult>, Boolean, Long, Long, Boolean) -> Unit,
     onExportRTTRangingResultsToCsv: (List<RangingResult>) -> String,
     userSettings: UserSettings,
     modifier: Modifier = Modifier,
@@ -121,7 +121,7 @@ private fun AccessPoints(
         if (selectedForRTT.isNotEmpty()) {
             item {
                 OutlinedButton(
-                    onClick = { onStartRTTRanging(selectedForRTT, userSettings.performContinuousRttRanging, userSettings.rttPeriod * 1000, userSettings.rttInterval) },
+                    onClick = { onStartRTTRanging(selectedForRTT, userSettings.performContinuousRttRanging, userSettings.rttPeriod * 1000, userSettings.rttInterval, userSettings.saveRttResults) },
                     modifier
                         .padding(5.dp)
                         .fillMaxSize()
@@ -179,7 +179,7 @@ fun AccessPointItem(ap: AccessPoint, onToggleSelectionForRTT: (ScanResult) -> Un
             Text("SSID: " + ap.ssid)
             Text("BSSID: " + ap.bssid)
             Text("Supports RTT: " + ap.isWifiRTTCompatible)
-            if (!ap.isWifiRTTCompatible) {
+            if (ap.isWifiRTTCompatible) {
                 Spacer(modifier = Modifier.height(20.dp))
                 Text("Select for RTT")
                 Switch(

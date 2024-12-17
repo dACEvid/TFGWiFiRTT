@@ -133,9 +133,9 @@ class AccessPointsViewModel @Inject constructor(
     /**
      * Start RTT ranging to the selected APs
      */
-    fun startRTTRanging(selectedForRTT: Set<ScanResult>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long) {
+    fun startRTTRanging(selectedForRTT: Set<ScanResult>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean) {
         viewModelScope.launch {
-            accessPointsRepository.startRTTRanging(selectedForRTT, performContinuousRttRanging, rttPeriod, rttInterval)
+            accessPointsRepository.startRTTRanging(selectedForRTT, performContinuousRttRanging, rttPeriod, rttInterval, saveRttResults)
         }
     }
 
