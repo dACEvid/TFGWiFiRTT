@@ -1,10 +1,8 @@
-package com.davidperez.tfgwifirtt.ui
+package com.davidperez.tfgwifirtt.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.davidperez.tfgwifirtt.data.RTTCompatibleDevicesRepository
 import com.davidperez.tfgwifirtt.data.UserSettingsRepository
-import com.davidperez.tfgwifirtt.model.RTTCompatibleDevice
 import com.davidperez.tfgwifirtt.model.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

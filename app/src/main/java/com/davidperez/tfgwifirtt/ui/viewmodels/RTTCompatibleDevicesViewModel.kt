@@ -1,4 +1,4 @@
-package com.davidperez.tfgwifirtt.ui
+package com.davidperez.tfgwifirtt.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
