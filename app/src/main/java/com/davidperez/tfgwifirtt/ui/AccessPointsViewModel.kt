@@ -1,19 +1,13 @@
 package com.davidperez.tfgwifirtt.ui
 
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.net.wifi.ScanResult
 import android.net.wifi.rtt.RangingResult
 import android.os.Build
-import androidx.activity.result.ActivityResultLauncher
-import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.davidperez.tfgwifirtt.data.AccessPointsRepository
 import com.davidperez.tfgwifirtt.model.AccessPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

@@ -1,9 +1,7 @@
 package com.davidperez.tfgwifirtt.ui
 
 import android.Manifest
-import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.net.wifi.ScanResult
@@ -13,13 +11,12 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
-import androidx.activity.result.ActivityResult
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,9 +26,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material.Checkbox
+import androidx.compose.material.Slider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -127,7 +127,8 @@ fun MyAppNav() {
 
     val topLevelRoutes = listOf(
         TopLevelRoute("Access Points", "accessPointsList", Icons.Default.Home),
-        TopLevelRoute("Compatible Devices", "compatibleDevicesList", Icons.Default.Info)
+        TopLevelRoute("Compatible Devices", "compatibleDevicesList", Icons.Default.Info),
+        TopLevelRoute("Settings", "settings", Icons.Default.Settings)
     )
 
     Scaffold(
@@ -160,6 +161,79 @@ fun MyAppNav() {
         NavHost(navController = navController, startDestination = "accessPointsList", Modifier.padding(innerPadding)) {
             composable("accessPointsList") { AccessPointsListScreen() }
             composable("compatibleDevicesList") { CompatibleDevicesListScreen() }
+            composable("settings") { SettingsScreen() }
+        }
+    }
+}
+
+@Composable
+fun SettingsScreen(
+    userSettingsViewModel: UserSettingsViewModel = hiltViewModel()
+) {
+    val userSettingsUiState by userSettingsViewModel.uiState.collectAsState()
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text(
+            text = "Settings",
+            fontSize = 30.sp,
+            fontWeight = FontWeight.Bold
+        )
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Only Show RTT-Compatible Access Points")
+            Checkbox(
+                checked = userSettingsUiState.userSettings.showOnlyRttCompatibleAps,
+                onCheckedChange = { userSettingsViewModel.setShowRTTCompatibleOnly(it) }
+            )
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Perform Continuous RTT Ranging")
+            Checkbox(
+                checked = userSettingsUiState.userSettings.performContinuousRttRanging,
+                onCheckedChange = { userSettingsViewModel.setPerformContinuousRttRanging(it) }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("RTT Ranging Period (s): ")
+            Text(text = userSettingsUiState.userSettings.rttPeriod.toString())
+        }
+        Slider(
+            value = userSettingsUiState.userSettings.rttPeriod.toFloat(),
+            onValueChange = { userSettingsViewModel.setRttPeriod(it.toInt()) },
+            valueRange = 5f..30f,
+            steps = 24,
+            enabled = userSettingsUiState.userSettings.performContinuousRttRanging
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Interval between RTT Requests (ms): ")
+            Text(text = userSettingsUiState.userSettings.rttInterval.toString())
+        }
+        Slider(
+            value = userSettingsUiState.userSettings.rttInterval.toFloat(),
+            onValueChange = {
+                val snappedValue = (it/50).toInt() * 50
+                userSettingsViewModel.setRttInterval(snappedValue)
+            },
+            valueRange = 50f..1000f,
+            steps = 18,
+            enabled = userSettingsUiState.userSettings.performContinuousRttRanging
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Save RTT Results For Export")
+            Checkbox(
+                checked = userSettingsUiState.userSettings.saveRttResults,
+                onCheckedChange = { userSettingsViewModel.setSaveRttResults(it) }
+            )
         }
     }
 }
