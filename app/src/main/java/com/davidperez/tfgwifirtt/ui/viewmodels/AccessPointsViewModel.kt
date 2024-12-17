@@ -6,7 +6,9 @@ import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.davidperez.tfgwifirtt.data.AccessPointsRepository
+import com.davidperez.tfgwifirtt.data.UserSettingsRepository
 import com.davidperez.tfgwifirtt.model.AccessPoint
+import com.davidperez.tfgwifirtt.model.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,11 +22,12 @@ import javax.inject.Inject
  */
 data class AccessPointsUiState(
     val accessPointsList: List<AccessPoint> = emptyList(),
+    val userSettings: UserSettings = UserSettings(),
     val selectedForRTT: Set<ScanResult> = emptySet(),
     val rttRangingResults: List<RangingResult> = emptyList(),
     val rttResultDialogText: String = "",
     val isLoading: Boolean = false,
-    val errorMessage: String = ""
+    val errorMessage: String = "",
 )
 
 /**
@@ -32,7 +35,8 @@ data class AccessPointsUiState(
  */
 @HiltViewModel
 class AccessPointsViewModel @Inject constructor(
-    private val accessPointsRepository: AccessPointsRepository
+    private val accessPointsRepository: AccessPointsRepository,
+    private val userSettingsRepository: UserSettingsRepository
 ): ViewModel() {
     private val _uiState = MutableStateFlow(AccessPointsUiState())
     val uiState: StateFlow<AccessPointsUiState> = _uiState.asStateFlow()
@@ -43,6 +47,19 @@ class AccessPointsViewModel @Inject constructor(
         observeSelectedForRTT() // Observe for changes in the selected APs for RTT
         observeRTTRangingResults()
         observeRTTResultDialogText()
+        observeUserSettings()
+    }
+
+    private fun observeUserSettings() {
+        viewModelScope.launch {
+            userSettingsRepository.getUserSettings().collect { userSettingsObserved ->
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        userSettings = userSettingsObserved
+                    )
+                }
+            }
+        }
     }
 
     private fun observeAccessPointsList() {

@@ -30,7 +30,6 @@ class UserSettingsViewModel @Inject constructor(
 
     init {
         getUserSettings()
-        //observeUserSettings()
     }
 
     private fun getUserSettings() {
@@ -42,27 +41,6 @@ class UserSettingsViewModel @Inject constructor(
                     )
                 }
             }
-        }
-    }
-
-//    fun getUserSettings() {
-//        viewModelScope.launch {
-//            userSettingsRepository.getUserSettings()
-//        }
-//    }
-
-    fun setUserSettings(userSettings: UserSettings) {
-        viewModelScope.launch {
-            userSettingsRepository.setUserSettings(
-                userSettings
-//                UserSettings(
-//                    showOnlyRttCompatibleAps = uiState.value.userSettings.showOnlyRttCompatibleAps,
-//                    performSingleRttRequest = uiState.value.userSettings.performSingleRttRequest,
-//                    rttPeriod = uiState.value.userSettings.rttPeriod,
-//                    rttInterval = uiState.value.userSettings.rttInterval,
-//                    saveRttResults = uiState.value.userSettings.saveRttResults
-//                )
-            )
         }
     }
 

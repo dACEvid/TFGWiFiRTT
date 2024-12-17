@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.davidperez.tfgwifirtt.model.AccessPoint
+import com.davidperez.tfgwifirtt.model.UserSettings
 import com.davidperez.tfgwifirtt.ui.viewmodels.AccessPointsViewModel
 
 @Composable
@@ -55,6 +56,7 @@ fun AccessPointsListScreen(
         onCreateRTTRangingRequest = { accessPointsViewModel.createRTTRangingRequest(it) },
         onDoContinuousRTTRanging = { accessPointsViewModel.doContinuousRTTRanging(it) },
         onExportRTTRangingResultsToCsv = { accessPointsViewModel.exportRTTRangingResultsToCsv(it) },
+        userSettings = accessPointsUiState.userSettings
     )
 
     RTTResultDialog(
@@ -74,6 +76,7 @@ private fun AccessPoints(
     onCreateRTTRangingRequest: (Set<ScanResult>) -> Unit,
     onDoContinuousRTTRanging: (Set<ScanResult>) -> Unit,
     onExportRTTRangingResultsToCsv: (List<RangingResult>) -> String,
+    userSettings: UserSettings,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -90,12 +93,17 @@ private fun AccessPoints(
         }
     )
 
+    var accessPointsToShow: List<AccessPoint> = accessPointsList
+    if (userSettings.showOnlyRttCompatibleAps ) {
+        accessPointsToShow = accessPointsList.filter { it.isWifiRTTCompatible }
+    }
+
     // Show access point list
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(4.dp),
         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 16.dp),
     ) {
-        if (accessPointsList.isNotEmpty()) {
+        if (accessPointsToShow.isNotEmpty()) {
             item {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -109,7 +117,7 @@ private fun AccessPoints(
                 }
             }
         }
-        items(accessPointsList) { ap ->
+        items(accessPointsToShow) { ap ->
             AccessPointItem(ap, onToggleSelectionForRTT)
         }
         if (selectedForRTT.isNotEmpty()) {

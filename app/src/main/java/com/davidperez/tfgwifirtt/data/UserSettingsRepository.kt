@@ -11,19 +11,19 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.davidperez.tfgwifirtt.model.UserSettings
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Interface to the RTT-compatible Devices data layer.
  */
 interface UserSettingsRepository {
-
-    suspend fun setUserSettings(settings: UserSettings)
-
     suspend fun getUserSettings(): Flow<UserSettings>
 
     suspend fun setShowRTTCompatibleOnly(value: Boolean)
@@ -50,16 +50,6 @@ class UserSettingsRepositoryImpl @Inject constructor(private val application: Ap
         val RTT_RANGING_PERIOD = intPreferencesKey("rtt_ranging_period")
         val INTERVAL_BETWEEN_RTT_REQUESTS = intPreferencesKey("interval_between_rtt_requests")
         val SAVE_RTT_RESULTS = booleanPreferencesKey("save_rtt_results")
-    }
-
-    override suspend fun setUserSettings(settings: UserSettings) {
-        application.applicationContext.dataStore.edit {
-            it[SHOW_RTT_COMPATIBLE_ONLY] = settings.showOnlyRttCompatibleAps
-            it[PERFORM_CONTINUOUS_RTT_RANGING] = settings.performContinuousRttRanging
-            it[RTT_RANGING_PERIOD] = settings.rttPeriod
-            it[INTERVAL_BETWEEN_RTT_REQUESTS] = settings.rttInterval
-            it[SAVE_RTT_RESULTS] = settings.saveRttResults
-        }
     }
 
     override suspend fun getUserSettings() = application.applicationContext.dataStore.data.map {
