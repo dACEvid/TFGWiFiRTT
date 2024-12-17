@@ -57,7 +57,7 @@ fun SettingsScreen(
         }
         Slider(
             value = userSettingsUiState.userSettings.rttPeriod.toFloat(),
-            onValueChange = { userSettingsViewModel.setRttPeriod(it.toInt()) },
+            onValueChange = { userSettingsViewModel.setRttPeriod(it.toLong()) },
             valueRange = 5f..30f,
             steps = 24,
             enabled = userSettingsUiState.userSettings.performContinuousRttRanging
@@ -72,7 +72,7 @@ fun SettingsScreen(
         Slider(
             value = userSettingsUiState.userSettings.rttInterval.toFloat(),
             onValueChange = {
-                val snappedValue = (it/50).toInt() * 50
+                val snappedValue = (it/50).toLong() * 50
                 userSettingsViewModel.setRttInterval(snappedValue)
             },
             valueRange = 50f..1000f,

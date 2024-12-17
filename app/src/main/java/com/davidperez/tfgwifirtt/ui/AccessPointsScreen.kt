@@ -53,8 +53,7 @@ fun AccessPointsListScreen(
         rttRangingResults = accessPointsUiState.rttRangingResults,
         onStartScan = { accessPointsViewModel.refreshAccessPoints() },
         onToggleSelectionForRTT = { accessPointsViewModel.toggleSelectionForRTT(it) },
-        onCreateRTTRangingRequest = { accessPointsViewModel.createRTTRangingRequest(it) },
-        onDoContinuousRTTRanging = { accessPointsViewModel.doContinuousRTTRanging(it) },
+        onStartRTTRanging = { selectedForRTT, performContinuousRttRanging, rttPeriod, rttInterval -> accessPointsViewModel.startRTTRanging(selectedForRTT, performContinuousRttRanging, rttPeriod, rttInterval) },
         onExportRTTRangingResultsToCsv = { accessPointsViewModel.exportRTTRangingResultsToCsv(it) },
         userSettings = accessPointsUiState.userSettings
     )
@@ -73,8 +72,7 @@ private fun AccessPoints(
     rttRangingResults: List<RangingResult>,
     onStartScan: () -> Unit,
     onToggleSelectionForRTT: (ScanResult) -> Unit,
-    onCreateRTTRangingRequest: (Set<ScanResult>) -> Unit,
-    onDoContinuousRTTRanging: (Set<ScanResult>) -> Unit,
+    onStartRTTRanging: (Set<ScanResult>, Boolean, Long, Long) -> Unit,
     onExportRTTRangingResultsToCsv: (List<RangingResult>) -> String,
     userSettings: UserSettings,
     modifier: Modifier = Modifier,
@@ -123,26 +121,13 @@ private fun AccessPoints(
         if (selectedForRTT.isNotEmpty()) {
             item {
                 OutlinedButton(
-                    onClick = { onCreateRTTRangingRequest(selectedForRTT) },
+                    onClick = { onStartRTTRanging(selectedForRTT, userSettings.performContinuousRttRanging, userSettings.rttPeriod * 1000, userSettings.rttInterval) },
                     modifier
                         .padding(5.dp)
                         .fillMaxSize()
                 ) {
                     Text(
-                        "Create RTT Ranging Request",
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-            item {
-                OutlinedButton(
-                    onClick = { onDoContinuousRTTRanging(selectedForRTT) },
-                    modifier
-                        .padding(5.dp)
-                        .fillMaxSize()
-                ) {
-                    Text(
-                        "Continuous RTT Ranging (20 sec)",
+                        "Start RTT Ranging",
                         textAlign = TextAlign.Center
                     )
                 }
@@ -194,7 +179,7 @@ fun AccessPointItem(ap: AccessPoint, onToggleSelectionForRTT: (ScanResult) -> Un
             Text("SSID: " + ap.ssid)
             Text("BSSID: " + ap.bssid)
             Text("Supports RTT: " + ap.isWifiRTTCompatible)
-            if (ap.isWifiRTTCompatible) {
+            if (!ap.isWifiRTTCompatible) {
                 Spacer(modifier = Modifier.height(20.dp))
                 Text("Select for RTT")
                 Switch(

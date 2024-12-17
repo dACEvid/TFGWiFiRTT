@@ -6,19 +6,16 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.davidperez.tfgwifirtt.model.UserSettings
 import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Interface to the RTT-compatible Devices data layer.
@@ -32,9 +29,9 @@ interface UserSettingsRepository {
 
     suspend fun setSaveRttResults(value: Boolean)
 
-    suspend fun setRttPeriod(value: Int)
+    suspend fun setRttPeriod(value: Long)
 
-    suspend fun setRttInterval(value: Int)
+    suspend fun setRttInterval(value: Long)
 
 }
 
@@ -47,8 +44,8 @@ class UserSettingsRepositoryImpl @Inject constructor(private val application: Ap
     companion object {
         val SHOW_RTT_COMPATIBLE_ONLY = booleanPreferencesKey("show_rtt_compatible_only")
         val PERFORM_CONTINUOUS_RTT_RANGING = booleanPreferencesKey("perform_single_rtt_request")
-        val RTT_RANGING_PERIOD = intPreferencesKey("rtt_ranging_period")
-        val INTERVAL_BETWEEN_RTT_REQUESTS = intPreferencesKey("interval_between_rtt_requests")
+        val RTT_RANGING_PERIOD = longPreferencesKey("rtt_ranging_period")
+        val INTERVAL_BETWEEN_RTT_REQUESTS = longPreferencesKey("interval_between_rtt_requests")
         val SAVE_RTT_RESULTS = booleanPreferencesKey("save_rtt_results")
     }
 
@@ -80,13 +77,13 @@ class UserSettingsRepositoryImpl @Inject constructor(private val application: Ap
         }
     }
 
-    override suspend fun setRttPeriod(value: Int) {
+    override suspend fun setRttPeriod(value: Long) {
         application.applicationContext.dataStore.edit {
             it[RTT_RANGING_PERIOD] = value
         }
     }
 
-    override suspend fun setRttInterval(value: Int) {
+    override suspend fun setRttInterval(value: Long) {
         application.applicationContext.dataStore.edit {
             it[INTERVAL_BETWEEN_RTT_REQUESTS] = value
         }

@@ -70,7 +70,7 @@ interface AccessPointsRepository {
      */
     suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>)
 
-    suspend fun doContinuousRTTRanging(selectedForRTT: Set<ScanResult>, duration: Long, delay: Long)
+    suspend fun startRTTRanging(selectedForRTT: Set<ScanResult>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long)
 
     suspend fun removeRTTResultDialog()
 }
@@ -186,16 +186,19 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         })
     }
 
-    override suspend fun doContinuousRTTRanging(selectedForRTT: Set<ScanResult>, duration: Long, delay: Long) {
-        // We could first empty rttRangingResults... but let's keep everything for now
+    override suspend fun startRTTRanging(selectedForRTT: Set<ScanResult>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long) {
+        // We could add a setting to only keep the last results for export
 
-        val endTime = System.currentTimeMillis() + duration
-        while (System.currentTimeMillis() < endTime) {
+        if (performContinuousRttRanging) {
+            val endTime = System.currentTimeMillis() + rttPeriod
+            while (System.currentTimeMillis() < endTime) {
+                createRTTRangingRequest(selectedForRTT)
+                delay(rttInterval) // Delay between requests
+            }
+            rttResultDialogText.value = "Continuous RTT Ranging finished"
+        } else {
             createRTTRangingRequest(selectedForRTT)
-            delay(delay) // Delay between requests
         }
-        // TODO: maybe offer user to download CSV?
-        rttResultDialogText.value = "Continuous RTT Ranging finished"
     }
 
     override suspend fun removeRTTResultDialog() {

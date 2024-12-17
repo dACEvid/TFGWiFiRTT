@@ -62,13 +62,13 @@ class UserSettingsViewModel @Inject constructor(
         }
     }
 
-    fun setRttPeriod(value: Int) {
+    fun setRttPeriod(value: Long) {
         viewModelScope.launch {
             userSettingsRepository.setRttPeriod(value)
         }
     }
 
-    fun setRttInterval(value: Int) {
+    fun setRttInterval(value: Long) {
         viewModelScope.launch {
             userSettingsRepository.setRttInterval(value)
         }

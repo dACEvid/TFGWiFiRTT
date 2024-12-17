@@ -131,20 +131,17 @@ class AccessPointsViewModel @Inject constructor(
     }
 
     /**
-     * Create RTT ranging request for the selected APs
+     * Start RTT ranging to the selected APs
      */
-    fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>) {
+    fun startRTTRanging(selectedForRTT: Set<ScanResult>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long) {
         viewModelScope.launch {
-            accessPointsRepository.createRTTRangingRequest(selectedForRTT)
+            accessPointsRepository.startRTTRanging(selectedForRTT, performContinuousRttRanging, rttPeriod, rttInterval)
         }
     }
 
-    fun doContinuousRTTRanging(selectedForRTT: Set<ScanResult>) {
-        viewModelScope.launch {
-            accessPointsRepository.doContinuousRTTRanging(selectedForRTT, 20000, 500) // Ranging time hardcoded to 20 seconds and intervals to 0.5 seconds
-        }
-    }
-
+    /**
+     * Export RTT results to CSV
+     */
     fun exportRTTRangingResultsToCsv(rttRangingResults: List<RangingResult>): String {
         val csvContent = buildString {
             appendLine("Timestamp,Device,Android Version,AP MAC Address,Status,Distance (mm),Std Dev (mm),Attempted Measurements,Successful Measurements,Bandwidth,Frequency (MHz)")
