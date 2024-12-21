@@ -1,4 +1,4 @@
-package com.davidperez.tfgwifirtt.ui
+package com.davidperez.tfgwifirtt.ui.screens
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row

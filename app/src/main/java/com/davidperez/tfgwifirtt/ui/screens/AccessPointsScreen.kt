@@ -1,4 +1,4 @@
-package com.davidperez.tfgwifirtt.ui
+package com.davidperez.tfgwifirtt.ui.screens
 
 import android.net.wifi.ScanResult
 import android.net.wifi.rtt.RangingResult

@@ -1,4 +1,4 @@
-package com.davidperez.tfgwifirtt.ui
+package com.davidperez.tfgwifirtt.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,7 +40,7 @@ fun CompatibleDevicesListScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "RTT-compatible Devices",
+                    text = "RTT-capable Devices",
                     fontSize = 30.sp,
                     fontWeight = FontWeight.Bold
                 )
