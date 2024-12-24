@@ -43,10 +43,10 @@ class AccessPointsViewModel @Inject constructor(
 
     init {
         observeAccessPointsList() // Observe for changes in the scanned access points
-        refreshAccessPoints() // Start scan
         observeSelectedForRTT() // Observe for changes in the selected APs for RTT
         observeRTTRangingResults()
         observeRTTResultDialogText()
+        observeIsLoading()
         observeUserSettings()
     }
 
@@ -110,12 +110,22 @@ class AccessPointsViewModel @Inject constructor(
         }
     }
 
+    private fun observeIsLoading() {
+        viewModelScope.launch {
+            accessPointsRepository.observeIsLoading().collect { isLoadingObserved ->
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        isLoading = isLoadingObserved
+                    )
+                }
+            }
+        }
+    }
+
     /**
      * Refresh access points and update the UI state
      */
     fun refreshAccessPoints() {
-        _uiState.value = AccessPointsUiState(isLoading = true) // Show loading
-
         viewModelScope.launch {
             accessPointsRepository.scanAccessPoints()
         }

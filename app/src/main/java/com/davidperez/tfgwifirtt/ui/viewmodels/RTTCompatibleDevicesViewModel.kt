@@ -17,7 +17,6 @@ import javax.inject.Inject
  */
 data class RTTCompatibleDevicesUiState(
     val rttCompatibleDevicesList: List<RTTCompatibleDevice> = emptyList(),
-    val isLoading: Boolean = false,
     val errorMessage: String = ""
 )
 
@@ -49,8 +48,6 @@ class RTTCompatibleDevicesViewModel @Inject constructor(
      * Get compatible devices from db and update the UI state
      */
     fun getRTTCompatibleDevices() {
-        _uiState.value = RTTCompatibleDevicesUiState(isLoading = true)
-
         viewModelScope.launch {
             rttCompatibleDevicesRepository.getRTTCompatibleDevices()
         }

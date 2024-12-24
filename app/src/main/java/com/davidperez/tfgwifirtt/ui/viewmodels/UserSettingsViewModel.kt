@@ -17,7 +17,6 @@ import javax.inject.Inject
  */
 data class UserSettingsUiState(
     val userSettings: UserSettings = UserSettings(),
-    val isLoading: Boolean = false,
     val errorMessage: String = ""
 )
 

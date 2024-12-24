@@ -61,6 +61,11 @@ interface AccessPointsRepository {
     fun observeRTTResultDialogText(): Flow<String>
 
     /**
+     * Observe the loading status
+     */
+    fun observeIsLoading(): Flow<Boolean>
+
+    /**
      * Toggle an access point to be selected for RTT or not.
      */
     suspend fun toggleSelectionForRTT(accessPointScanResult: ScanResult)
@@ -80,6 +85,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
     private val accessPointsList = MutableStateFlow<List<AccessPoint>>(emptyList())
     private val rttRangingResults = MutableStateFlow<List<RangingResult>>(emptyList())
     private val rttResultDialogText = MutableStateFlow("")
+    private val isLoading = MutableStateFlow(false)
 
     var wifiManager: WifiManager = this.application.getSystemService(Context.WIFI_SERVICE) as WifiManager // Initialize WifiManager
     //var wifiRTTManager: WifiRttManager = this.application.getSystemService(Context.WIFI_RTT_RANGING_SERVICE) as WifiRttManager // Initialize WifiRttManager
@@ -95,7 +101,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
             }
 
             scanResultList = wifiManager.scanResults
-            Log.d("TestDavid", scanResultList.joinToString())
+            isLoading.value = false
             accessPointsList.value = scanResultList.map { sr -> AccessPoint(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) sr.wifiSsid.toString() else sr.SSID, sr.BSSID, sr.is80211mcResponder, sr) }
         }
     }
@@ -117,6 +123,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
     }
 
     override suspend fun scanAccessPoints() {
+        isLoading.value = true
         val success = wifiManager.startScan()
         if (!success) {
             Log.e("TestDavid", "Starting Scanning of Access Points failed")
@@ -130,6 +137,8 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
     override fun observeRTTRangingResults(): Flow<List<RangingResult>> = rttRangingResults.asStateFlow()
 
     override fun observeRTTResultDialogText(): Flow<String> = rttResultDialogText.asStateFlow()
+
+    override fun observeIsLoading(): Flow<Boolean> = isLoading.asStateFlow()
 
     override suspend fun toggleSelectionForRTT(accessPointScanResult: ScanResult) {
         selectedForRTT.update {
