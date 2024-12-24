@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.davidperez.tfgwifirtt.ui.components.TitleWithDivider
+import com.davidperez.tfgwifirtt.ui.components.ScreenTitle
 import com.davidperez.tfgwifirtt.ui.viewmodels.UserSettingsViewModel
 
 
@@ -34,7 +34,7 @@ fun SettingsScreen(
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         stickyHeader {
-            TitleWithDivider("Settings")
+            ScreenTitle("Settings")
         }
         item {
             Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {

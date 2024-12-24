@@ -5,25 +5,19 @@ import android.net.wifi.rtt.RangingResult
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Switch
@@ -32,19 +26,16 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.davidperez.tfgwifirtt.model.AccessPoint
 import com.davidperez.tfgwifirtt.model.UserSettings
-import com.davidperez.tfgwifirtt.ui.components.TitleWithDivider
+import com.davidperez.tfgwifirtt.ui.components.ScreenTitle
 import com.davidperez.tfgwifirtt.ui.viewmodels.AccessPointsViewModel
 
 @Composable
@@ -107,13 +98,11 @@ private fun AccessPoints(
     }
 
     // Show access point list
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
+    LazyColumn {
         if (accessPointsList.isNotEmpty()) {
             stickyHeader {
-                TitleWithDivider("Visible Access Points")
-                TitleWithDivider("${accessPointsList.size} APs discovered (${rttCompatibleAccessPoints.size} of them are RTT-capable)", true)
+                ScreenTitle("Visible Access Points")
+                ScreenTitle("${accessPointsList.size} APs discovered (${rttCompatibleAccessPoints.size} of them are RTT-capable)", true)
             }
         }
         items(accessPointsToShow) { ap ->
@@ -168,7 +157,10 @@ private fun AccessPoints(
 }
 
 @Composable
-fun AccessPointItem(ap: AccessPoint, onToggleSelectionForRTT: (ScanResult) -> Unit) {
+fun AccessPointItem(
+    ap: AccessPoint,
+    onToggleSelectionForRTT: (ScanResult) -> Unit
+) {
     OutlinedCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -177,9 +169,27 @@ fun AccessPointItem(ap: AccessPoint, onToggleSelectionForRTT: (ScanResult) -> Un
         Column(
             modifier = Modifier.padding(10.dp)
         ) {
-            Text("SSID: " + ap.ssid)
-            Text("BSSID: " + ap.bssid)
-            Text("Supports RTT: " + ap.isWifiRTTCompatible)
+            Row {
+                Text("SSID: ")
+                Text(
+                    text = ap.ssid,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Row {
+                Text("BSSID: ")
+                Text(
+                    text = ap.bssid,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Row {
+                Text("Supports RTT: ")
+                Text(
+                    text = ap.isWifiRTTCompatible.toString(),
+                    fontWeight = FontWeight.Bold
+                )
+            }
             if (ap.isWifiRTTCompatible) {
                 Spacer(modifier = Modifier.height(20.dp))
                 Text("Select for RTT")
