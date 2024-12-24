@@ -4,6 +4,7 @@ import android.net.wifi.ScanResult
 import android.net.wifi.rtt.RangingResult
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.davidperez.tfgwifirtt.model.AccessPoint
 import com.davidperez.tfgwifirtt.model.UserSettings
+import com.davidperez.tfgwifirtt.ui.components.TitleWithDivider
 import com.davidperez.tfgwifirtt.ui.viewmodels.AccessPointsViewModel
 
 @Composable
@@ -65,6 +67,7 @@ fun AccessPointsListScreen(
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun AccessPoints(
     accessPointsList: List<AccessPoint>,
@@ -98,21 +101,11 @@ private fun AccessPoints(
 
     // Show access point list
     LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         if (accessPointsToShow.isNotEmpty()) {
-            item {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Visible Access Points",
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+            stickyHeader {
+                TitleWithDivider("Visible Access Points")
             }
         }
         items(accessPointsToShow) { ap ->

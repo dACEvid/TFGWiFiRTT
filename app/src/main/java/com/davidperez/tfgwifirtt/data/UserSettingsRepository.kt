@@ -3,6 +3,7 @@ package com.davidperez.tfgwifirtt.data
 import android.app.Application
 import android.content.Context
 import androidx.datastore.core.DataStore
+import androidx.datastore.core.IOException
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -60,8 +61,12 @@ class UserSettingsRepositoryImpl @Inject constructor(private val application: Ap
     }
 
     override suspend fun setShowRTTCompatibleOnly(value: Boolean) {
-        application.applicationContext.dataStore.edit {
-            it[SHOW_RTT_COMPATIBLE_ONLY] = value
+        try {
+            application.applicationContext.dataStore.edit {
+                it[SHOW_RTT_COMPATIBLE_ONLY] = value
+            }
+        } catch (e: IOException) {
+            // exception thrown if the write to disk fails
         }
     }
 

@@ -109,16 +109,16 @@ fun MyAppNav() {
 
     Scaffold(
         bottomBar = {
-            BottomNavigation(modifier = Modifier.height(80.dp)) {
+            BottomNavigation(modifier = Modifier.height(80.dp), backgroundColor = MaterialTheme.colorScheme.primary) {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
                 topLevelRoutes.forEach { topLevelRoute ->
                     val isSelected = currentDestination?.route == topLevelRoute.route
                     BottomNavigationItem(
                         icon = { Icon(topLevelRoute.icon, contentDescription = topLevelRoute.name, tint = if (isSelected) Color.White else Color.Gray) },
-                        selectedContentColor = Color.Gray,
+                        selectedContentColor = MaterialTheme.colorScheme.onPrimary,
                         unselectedContentColor = Color.Gray,
-                        label = { Text(topLevelRoute.name, color = if (isSelected) Color.White else Color.Gray, textAlign = TextAlign.Center, lineHeight = 16.sp) },
+                        label = { Text(topLevelRoute.name, color = if (isSelected) MaterialTheme.colorScheme.onPrimary else Color.Gray, textAlign = TextAlign.Center, lineHeight = 16.sp) },
                         selected = isSelected,
                         onClick = {
                             navController.navigate(topLevelRoute.route) {
