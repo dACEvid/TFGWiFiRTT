@@ -61,6 +61,12 @@ class UserSettingsViewModel @Inject constructor(
         }
     }
 
+    fun setSaveLastRttOperationOnly(value: Boolean) {
+        viewModelScope.launch {
+            userSettingsRepository.setSaveLastRttOperationOnly(value)
+        }
+    }
+
     fun setRttPeriod(value: Long) {
         viewModelScope.launch {
             userSettingsRepository.setRttPeriod(value)

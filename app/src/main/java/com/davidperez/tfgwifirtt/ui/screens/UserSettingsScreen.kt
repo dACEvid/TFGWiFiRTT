@@ -133,6 +133,21 @@ fun SettingsScreen(
                 )
             }
         }
+        item {
+            Row(
+                modifier = Modifier.padding(horizontal = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Only Save Results of Last RTT Operation")
+                Spacer(Modifier.weight(1f))
+                Checkbox(
+                    checked = userSettingsUiState.userSettings.saveOnlyLastRttOperation,
+                    onCheckedChange = { userSettingsViewModel.setSaveLastRttOperationOnly(it) },
+                    colors = myCheckBoxColors(),
+                    enabled = userSettingsUiState.userSettings.saveRttResults,
+                )
+            }
+        }
     }
 }
 

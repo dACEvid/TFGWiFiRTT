@@ -30,6 +30,8 @@ interface UserSettingsRepository {
 
     suspend fun setSaveRttResults(value: Boolean)
 
+    suspend fun setSaveLastRttOperationOnly(value: Boolean)
+
     suspend fun setRttPeriod(value: Long)
 
     suspend fun setRttInterval(value: Long)
@@ -48,6 +50,7 @@ class UserSettingsRepositoryImpl @Inject constructor(private val application: Ap
         val RTT_RANGING_PERIOD = longPreferencesKey("rtt_ranging_period")
         val INTERVAL_BETWEEN_RTT_REQUESTS = longPreferencesKey("interval_between_rtt_requests")
         val SAVE_RTT_RESULTS = booleanPreferencesKey("save_rtt_results")
+        val SAVE_LAST_RTT_OPERATION_ONLY = booleanPreferencesKey("save_last_rtt_operation_only")
     }
 
     override suspend fun getUserSettings() = application.applicationContext.dataStore.data.map {
@@ -56,7 +59,8 @@ class UserSettingsRepositoryImpl @Inject constructor(private val application: Ap
             performContinuousRttRanging = it[PERFORM_CONTINUOUS_RTT_RANGING] ?: false,
             rttPeriod =  it[RTT_RANGING_PERIOD] ?: 10,
             rttInterval = it[INTERVAL_BETWEEN_RTT_REQUESTS] ?: 100,
-            saveRttResults = it[SAVE_RTT_RESULTS] ?: true
+            saveRttResults = it[SAVE_RTT_RESULTS] ?: true,
+            saveOnlyLastRttOperation = it[SAVE_LAST_RTT_OPERATION_ONLY] ?: false
         )
     }
 
@@ -79,6 +83,12 @@ class UserSettingsRepositoryImpl @Inject constructor(private val application: Ap
     override suspend fun setSaveRttResults(value: Boolean) {
         application.applicationContext.dataStore.edit {
             it[SAVE_RTT_RESULTS] = value
+        }
+    }
+
+    override suspend fun setSaveLastRttOperationOnly(value: Boolean) {
+        application.applicationContext.dataStore.edit {
+            it[SAVE_LAST_RTT_OPERATION_ONLY] = value
         }
     }
 

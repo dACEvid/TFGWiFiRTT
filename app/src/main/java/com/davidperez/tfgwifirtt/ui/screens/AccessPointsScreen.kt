@@ -12,15 +12,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Switch
@@ -56,7 +53,7 @@ fun AccessPointsListScreen(
         isLoading = accessPointsUiState.isLoading,
         onStartScan = { accessPointsViewModel.refreshAccessPoints() },
         onToggleSelectionForRTT = { accessPointsViewModel.toggleSelectionForRTT(it) },
-        onStartRTTRanging = { selectedForRTT, performContinuousRttRanging, rttPeriod, rttInterval, saveRttResults -> accessPointsViewModel.startRTTRanging(selectedForRTT, performContinuousRttRanging, rttPeriod, rttInterval, saveRttResults) },
+        onStartRTTRanging = { selectedForRTT, performContinuousRttRanging, rttPeriod, rttInterval, saveRttResults, saveOnlyLastRttOperation -> accessPointsViewModel.startRTTRanging(selectedForRTT, performContinuousRttRanging, rttPeriod, rttInterval, saveRttResults, saveOnlyLastRttOperation) },
         onExportRTTRangingResultsToCsv = { accessPointsViewModel.exportRTTRangingResultsToCsv(it) },
         userSettings = accessPointsUiState.userSettings
     )
@@ -77,7 +74,7 @@ private fun AccessPoints(
     isLoading: Boolean,
     onStartScan: () -> Unit,
     onToggleSelectionForRTT: (ScanResult) -> Unit,
-    onStartRTTRanging: (Set<ScanResult>, Boolean, Long, Long, Boolean) -> Unit,
+    onStartRTTRanging: (Set<ScanResult>, Boolean, Long, Long, Boolean, Boolean) -> Unit,
     onExportRTTRangingResultsToCsv: (List<RangingResult>) -> String,
     userSettings: UserSettings,
     modifier: Modifier = Modifier,
@@ -121,7 +118,7 @@ private fun AccessPoints(
         if (selectedForRTT.isNotEmpty()) {
             item {
                 OutlinedButton(
-                    onClick = { onStartRTTRanging(selectedForRTT, userSettings.performContinuousRttRanging, userSettings.rttPeriod * 1000, userSettings.rttInterval, userSettings.saveRttResults) },
+                    onClick = { onStartRTTRanging(selectedForRTT, userSettings.performContinuousRttRanging, userSettings.rttPeriod * 1000, userSettings.rttInterval, userSettings.saveRttResults, userSettings.saveOnlyLastRttOperation) },
                     modifier
                         .padding(5.dp)
                         .fillMaxSize()

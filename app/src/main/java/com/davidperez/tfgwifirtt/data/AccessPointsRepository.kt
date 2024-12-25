@@ -73,9 +73,9 @@ interface AccessPointsRepository {
     /**
      * Create RTT ranging request for the selected APs
      */
-    suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>, saveRttResults: Boolean)
+    suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>, saveRttResults: Boolean, saveOnlyLastRttOperation: Boolean)
 
-    suspend fun startRTTRanging(selectedForRTT: Set<ScanResult>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean)
+    suspend fun startRTTRanging(selectedForRTT: Set<ScanResult>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean, saveOnlyLastRttOperation: Boolean)
 
     suspend fun removeRTTResultDialog()
 }
@@ -88,7 +88,6 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
     private val isLoading = MutableStateFlow(false)
 
     var wifiManager: WifiManager = this.application.getSystemService(Context.WIFI_SERVICE) as WifiManager // Initialize WifiManager
-    //var wifiRTTManager: WifiRttManager = this.application.getSystemService(Context.WIFI_RTT_RANGING_SERVICE) as WifiRttManager // Initialize WifiRttManager
     lateinit var wifiRTTManager: WifiRttManager
     var scanResultList = mutableListOf<ScanResult>()
 
@@ -155,7 +154,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
     }
 
     @SuppressLint("MissingPermission")
-    override suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>, saveRttResults: Boolean) {
+    override suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>, saveRttResults: Boolean, saveOnlyLastRttOperation: Boolean) {
         wifiRTTManager = this.application.getSystemService(Context.WIFI_RTT_RANGING_SERVICE) as WifiRttManager // Initialize WifiRttManager
         // Create a ranging request
         val req: RangingRequest = RangingRequest.Builder().run {
@@ -167,6 +166,9 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
             // Callback that triggers when the ranging operation completes
             override fun onRangingResults(results: List<RangingResult>) {
                 if (saveRttResults) {
+                    if (saveOnlyLastRttOperation) {
+                        rttRangingResults.value = emptyList()
+                    }
                     rttRangingResults.update { it + results } // Save results to export to CSV if user setting is enabled
                 }
                 val resultsStr = buildString {
@@ -189,9 +191,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         })
     }
 
-    override suspend fun startRTTRanging(selectedForRTT: Set<ScanResult>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean) {
-        // We could add a setting to only keep the last results for export
-
+    override suspend fun startRTTRanging(selectedForRTT: Set<ScanResult>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean, saveOnlyLastRttOperation: Boolean) {
         // Check whether the device supports WiFi RTT
         if (!this.application.packageManager.hasSystemFeature(PackageManager.FEATURE_WIFI_RTT)) {
             rttResultDialogText.value = "Device does not support WiFi RTT"
@@ -203,12 +203,12 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         if (performContinuousRttRanging) {
             val endTime = System.currentTimeMillis() + rttPeriod
             while (System.currentTimeMillis() < endTime) {
-                createRTTRangingRequest(selectedForRTT, saveRttResults)
+                createRTTRangingRequest(selectedForRTT, saveRttResults, saveOnlyLastRttOperation)
                 delay(rttInterval) // Delay between requests
             }
             rttResultDialogText.value = "Continuous RTT Ranging finished"
         } else {
-            createRTTRangingRequest(selectedForRTT, saveRttResults)
+            createRTTRangingRequest(selectedForRTT, saveRttResults, saveOnlyLastRttOperation)
         }
     }
 
