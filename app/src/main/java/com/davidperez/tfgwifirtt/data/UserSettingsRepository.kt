@@ -55,7 +55,7 @@ class UserSettingsRepositoryImpl @Inject constructor(private val application: Ap
             showOnlyRttCompatibleAps = it[SHOW_RTT_COMPATIBLE_ONLY] ?: false,
             performContinuousRttRanging = it[PERFORM_CONTINUOUS_RTT_RANGING] ?: false,
             rttPeriod =  it[RTT_RANGING_PERIOD] ?: 10,
-            rttInterval = it[INTERVAL_BETWEEN_RTT_REQUESTS] ?: 500,
+            rttInterval = it[INTERVAL_BETWEEN_RTT_REQUESTS] ?: 100,
             saveRttResults = it[SAVE_RTT_RESULTS] ?: true
         )
     }

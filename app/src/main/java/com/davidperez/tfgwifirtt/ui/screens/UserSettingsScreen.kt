@@ -2,13 +2,17 @@ package com.davidperez.tfgwifirtt.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Checkbox
 import androidx.compose.material.CheckboxColors
 import androidx.compose.material.CheckboxDefaults
 import androidx.compose.material.Slider
+import androidx.compose.material.SliderColors
+import androidx.compose.material.SliderDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.davidperez.tfgwifirtt.ui.components.ScreenTitle
+import com.davidperez.tfgwifirtt.ui.components.SettingsSectionTitle
 import com.davidperez.tfgwifirtt.ui.viewmodels.UserSettingsViewModel
 
 
@@ -30,15 +35,20 @@ fun SettingsScreen(
 ) {
     val userSettingsUiState by userSettingsViewModel.uiState.collectAsState()
 
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
+    LazyColumn(verticalArrangement = Arrangement.Center) {
         stickyHeader {
             ScreenTitle("Settings")
         }
         item {
-            Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            SettingsSectionTitle("General Settings")
+        }
+        item {
+            Row(
+                modifier = Modifier.padding(horizontal = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text("Only Show RTT-Compatible APs")
+                Spacer(Modifier.weight(1f))
                 Checkbox(
                     checked = userSettingsUiState.userSettings.showOnlyRttCompatibleAps,
                     onCheckedChange = { userSettingsViewModel.setShowRTTCompatibleOnly(it) },
@@ -46,9 +56,17 @@ fun SettingsScreen(
                 )
             }
         }
+
         item {
-            Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            SettingsSectionTitle("RTT Ranging Settings")
+        }
+        item {
+            Row(
+                modifier = Modifier.padding(horizontal = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text("Perform Continuous RTT Ranging")
+                Spacer(Modifier.weight(1f))
                 Checkbox(
                     checked = userSettingsUiState.userSettings.performContinuousRttRanging,
                     onCheckedChange = { userSettingsViewModel.setPerformContinuousRttRanging(it) },
@@ -57,43 +75,57 @@ fun SettingsScreen(
             }
         }
         item {
-            Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("RTT Ranging Period (s): ")
-                Text(text = userSettingsUiState.userSettings.rttPeriod.toString())
+            Column {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("RTT Ranging Period (s): ")
+                    Text(text = userSettingsUiState.userSettings.rttPeriod.toString())
+                }
+                Slider(
+                    value = userSettingsUiState.userSettings.rttPeriod.toFloat(),
+                    onValueChange = { userSettingsViewModel.setRttPeriod(it.toLong()) },
+                    valueRange = 5f..30f,
+                    steps = 24,
+                    enabled = userSettingsUiState.userSettings.performContinuousRttRanging,
+                    colors = mySliderColors()
+                )
             }
         }
         item {
-            Slider(
-                modifier = Modifier.padding(10.dp),
-                value = userSettingsUiState.userSettings.rttPeriod.toFloat(),
-                onValueChange = { userSettingsViewModel.setRttPeriod(it.toLong()) },
-                valueRange = 5f..30f,
-                steps = 24,
-                enabled = userSettingsUiState.userSettings.performContinuousRttRanging
-            )
-        }
-        item {
-            Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Interval between RTT Requests (ms): ")
-                Text(text = userSettingsUiState.userSettings.rttInterval.toString())
+            Column {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Interval between RTT Requests (ms): ")
+                    Text(text = userSettingsUiState.userSettings.rttInterval.toString())
+                }
+                Slider(
+                    value = userSettingsUiState.userSettings.rttInterval.toFloat(),
+                    onValueChange = {
+                        val snappedValue = (it/20).toLong() * 20
+                        userSettingsViewModel.setRttInterval(snappedValue)
+                    },
+                    valueRange = 20f..500f,
+                    steps = 23,
+                    enabled = userSettingsUiState.userSettings.performContinuousRttRanging,
+                    colors = mySliderColors()
+                )
             }
         }
+
         item {
-            Slider(
-                modifier = Modifier.padding(10.dp),
-                value = userSettingsUiState.userSettings.rttInterval.toFloat(),
-                onValueChange = {
-                    val snappedValue = (it/50).toLong() * 50
-                    userSettingsViewModel.setRttInterval(snappedValue)
-                },
-                valueRange = 50f..1000f,
-                steps = 18,
-                enabled = userSettingsUiState.userSettings.performContinuousRttRanging
-            )
+            SettingsSectionTitle("RTT Results Settings")
         }
         item {
-            Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.padding(horizontal = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text("Save RTT Results For Export")
+                Spacer(Modifier.weight(1f))
                 Checkbox(
                     checked = userSettingsUiState.userSettings.saveRttResults,
                     onCheckedChange = { userSettingsViewModel.setSaveRttResults(it) },
@@ -109,5 +141,14 @@ fun myCheckBoxColors(): CheckboxColors {
     return CheckboxDefaults.colors(
         checkedColor = MaterialTheme.colorScheme.primary,
         uncheckedColor = Color.Gray
+    )
+}
+
+@Composable
+fun mySliderColors(): SliderColors {
+    return SliderDefaults.colors(
+        thumbColor = MaterialTheme.colorScheme.primary,
+        disabledThumbColor = Color.Gray,
+        activeTrackColor = MaterialTheme.colorScheme.primary
     )
 }

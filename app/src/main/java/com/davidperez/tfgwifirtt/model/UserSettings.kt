@@ -4,6 +4,6 @@ data class UserSettings(
     val showOnlyRttCompatibleAps: Boolean = false,
     val performContinuousRttRanging: Boolean = false,
     val rttPeriod: Long = 10,
-    val rttInterval: Long = 500,
+    val rttInterval: Long = 100,
     val saveRttResults: Boolean = true
 )
