@@ -85,9 +85,12 @@ fun SettingsScreen(
                 }
                 Slider(
                     value = userSettingsUiState.userSettings.rttPeriod.toFloat(),
-                    onValueChange = { userSettingsViewModel.setRttPeriod(it.toLong()) },
-                    valueRange = 5f..30f,
-                    steps = 24,
+                    onValueChange = {
+                        val snappedValue = (it/5).toLong() * 5
+                        userSettingsViewModel.setRttPeriod(snappedValue)
+                    },
+                    valueRange = 5f..120f,
+                    steps = 22,
                     enabled = userSettingsUiState.userSettings.performContinuousRttRanging,
                     colors = mySliderColors()
                 )
