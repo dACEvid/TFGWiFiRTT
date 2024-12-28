@@ -99,7 +99,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         override fun onReceive(context: Context, intent: Intent) {
             val success = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)
             if (!success) {
-                Log.e("TestDavid", "Scanning of Access Points failed")
+                Toast.makeText(context, "Scanning of Access Points failed", Toast.LENGTH_LONG).show()
             }
 
             scanResultList = wifiManager.scanResults
@@ -111,7 +111,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
     private val wifiRTTStateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (!wifiRTTManager.isAvailable) {
-                Log.e("TestDavid", "WiFi RTT is not available")
+                Toast.makeText(context, "WiFi RTT is not available", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -134,7 +134,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         isLoading.value = true
         val success = wifiManager.startScan()
         if (!success) {
-            Log.e("TestDavid", "Starting Scanning of Access Points failed")
+            Toast.makeText(this.application, "Starting Scanning of Access Points failed", Toast.LENGTH_LONG).show()
             isLoading.value = false
         }
     }
@@ -244,7 +244,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
                 Log.d("TestDavid", "Device added with composite ID: $compositeId")
             }
             .addOnFailureListener { e ->
-                Log.e("TestDavid", "Error adding device to Firestore", e)
+                Toast.makeText(this.application, "Error adding device to Firestore", Toast.LENGTH_LONG).show()
             }
     }
 }

@@ -16,8 +16,7 @@ import javax.inject.Inject
  * UI state for the User Settings
  */
 data class UserSettingsUiState(
-    val userSettings: UserSettings = UserSettings(),
-    val errorMessage: String = ""
+    val userSettings: UserSettings = UserSettings()
 )
 
 @HiltViewModel

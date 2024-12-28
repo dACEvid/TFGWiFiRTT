@@ -26,8 +26,7 @@ data class AccessPointsUiState(
     val selectedForRTT: Set<ScanResult> = emptySet(),
     val rttRangingResults: List<RangingResult> = emptyList(),
     val rttResultDialogText: String = "",
-    val isLoading: Boolean = false,
-    val errorMessage: String = "",
+    val isLoading: Boolean = false
 )
 
 /**

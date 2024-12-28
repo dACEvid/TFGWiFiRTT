@@ -197,7 +197,7 @@ fun AccessPointItem(
                     fontWeight = FontWeight.Bold
                 )
             }
-            if (ap.isWifiRTTCompatible) {
+            if (!ap.isWifiRTTCompatible) {
                 Spacer(modifier = Modifier.height(20.dp))
                 Text("Select for RTT")
                 Switch(

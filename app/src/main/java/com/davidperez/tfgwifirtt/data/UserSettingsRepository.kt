@@ -2,6 +2,7 @@ package com.davidperez.tfgwifirtt.data
 
 import android.app.Application
 import android.content.Context
+import android.widget.Toast
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.IOException
 import androidx.datastore.preferences.core.Preferences
@@ -69,37 +70,62 @@ class UserSettingsRepositoryImpl @Inject constructor(private val application: Ap
             }
         } catch (e: IOException) {
             // exception thrown if the write to disk fails
+            showErrorMsg()
         }
     }
 
     override suspend fun setPerformContinuousRttRanging(value: Boolean) {
-        application.applicationContext.dataStore.edit {
-            it[PERFORM_CONTINUOUS_RTT_RANGING] = value
+        try {
+            application.applicationContext.dataStore.edit {
+                it[PERFORM_CONTINUOUS_RTT_RANGING] = value
+            }
+        } catch (e: IOException) {
+            showErrorMsg()
         }
     }
 
     override suspend fun setSaveRttResults(value: Boolean) {
-        application.applicationContext.dataStore.edit {
-            it[SAVE_RTT_RESULTS] = value
+        try {
+            application.applicationContext.dataStore.edit {
+                it[SAVE_RTT_RESULTS] = value
+            }
+        } catch (e: IOException) {
+            showErrorMsg()
         }
     }
 
     override suspend fun setSaveLastRttOperationOnly(value: Boolean) {
-        application.applicationContext.dataStore.edit {
-            it[SAVE_LAST_RTT_OPERATION_ONLY] = value
+        try {
+            application.applicationContext.dataStore.edit {
+                it[SAVE_LAST_RTT_OPERATION_ONLY] = value
+            }
+        } catch (e: IOException) {
+            showErrorMsg()
         }
     }
 
     override suspend fun setRttPeriod(value: Long) {
-        application.applicationContext.dataStore.edit {
-            it[RTT_RANGING_PERIOD] = value
+        try {
+            application.applicationContext.dataStore.edit {
+                it[RTT_RANGING_PERIOD] = value
+            }
+        } catch (e: IOException) {
+            showErrorMsg()
         }
     }
 
     override suspend fun setRttInterval(value: Long) {
-        application.applicationContext.dataStore.edit {
-            it[INTERVAL_BETWEEN_RTT_REQUESTS] = value
+        try {
+            application.applicationContext.dataStore.edit {
+                it[INTERVAL_BETWEEN_RTT_REQUESTS] = value
+            }
+        } catch (e: IOException) {
+            showErrorMsg()
         }
+    }
+
+    private fun showErrorMsg() {
+        Toast.makeText(this.application, "Update of setting failed", Toast.LENGTH_LONG).show()
     }
 }
 

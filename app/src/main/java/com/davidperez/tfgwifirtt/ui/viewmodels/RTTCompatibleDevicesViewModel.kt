@@ -16,8 +16,7 @@ import javax.inject.Inject
  * UI state for the Access Points
  */
 data class RTTCompatibleDevicesUiState(
-    val rttCompatibleDevicesList: List<RTTCompatibleDevice> = emptyList(),
-    val errorMessage: String = ""
+    val rttCompatibleDevicesList: List<RTTCompatibleDevice> = emptyList()
 )
 
 @HiltViewModel
