@@ -41,8 +41,6 @@ interface UserSettingsRepository {
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_settings")
 
 class UserSettingsRepositoryImpl @Inject constructor(private val application: Application) : UserSettingsRepository {
-    //private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_settings")
-
     // Keys for user settings
     companion object {
         val SHOW_RTT_COMPATIBLE_ONLY = booleanPreferencesKey("show_rtt_compatible_only")

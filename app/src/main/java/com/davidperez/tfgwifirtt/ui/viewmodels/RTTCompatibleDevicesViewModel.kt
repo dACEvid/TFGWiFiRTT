@@ -47,7 +47,7 @@ class RTTCompatibleDevicesViewModel @Inject constructor(
     /**
      * Get compatible devices from db and update the UI state
      */
-    fun getRTTCompatibleDevices() {
+    private fun getRTTCompatibleDevices() {
         viewModelScope.launch {
             rttCompatibleDevicesRepository.getRTTCompatibleDevices()
         }

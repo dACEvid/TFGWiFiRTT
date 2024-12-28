@@ -44,13 +44,8 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private lateinit var locationManager: LocationManager
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Initialize  LocationManager
-        locationManager = applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         requestNeededPermissions()
 
@@ -67,11 +62,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun requestNeededPermissions() {
-        // check if location is enabled
-        if (!locationManager.isLocationEnabled) {
-            Toast.makeText(this, "Please enable location services", Toast.LENGTH_SHORT).show()
-        }
-
         // Permissions needed for a successful call to startScan()
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)

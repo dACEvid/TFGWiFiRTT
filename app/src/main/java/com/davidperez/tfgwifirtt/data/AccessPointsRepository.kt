@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.net.wifi.ScanResult
 import android.net.wifi.WifiManager
 import android.net.wifi.rtt.RangingRequest
@@ -15,6 +16,7 @@ import android.net.wifi.rtt.RangingResultCallback
 import android.net.wifi.rtt.WifiRttManager
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import com.davidperez.tfgwifirtt.model.AccessPoint
 import com.davidperez.tfgwifirtt.model.RTTCompatibleDevice
 import com.google.firebase.Firebase
@@ -87,6 +89,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
     private val rttResultDialogText = MutableStateFlow("")
     private val isLoading = MutableStateFlow(false)
 
+    var locationManager: LocationManager = this.application.getSystemService(Context.LOCATION_SERVICE) as LocationManager // Initialize LocationManager
     var wifiManager: WifiManager = this.application.getSystemService(Context.WIFI_SERVICE) as WifiManager // Initialize WifiManager
     lateinit var wifiRTTManager: WifiRttManager
     var scanResultList = mutableListOf<ScanResult>()
@@ -122,10 +125,17 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
     }
 
     override suspend fun scanAccessPoints() {
+        // check if location is enabled (needed for scanning APs)
+        if (!locationManager.isLocationEnabled) {
+            Toast.makeText(this.application, "Please enable location services", Toast.LENGTH_LONG).show()
+            return
+        }
+
         isLoading.value = true
         val success = wifiManager.startScan()
         if (!success) {
             Log.e("TestDavid", "Starting Scanning of Access Points failed")
+            isLoading.value = false
         }
     }
 
@@ -236,15 +246,6 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
             .addOnFailureListener { e ->
                 Log.e("TestDavid", "Error adding device to Firestore", e)
             }
-
-//        db.collection("compatible-devices")
-//            .add(device)
-//            .addOnSuccessListener { documentReference ->
-//                Log.d("TestDavid", "Device successfully added with ID: ${documentReference.id}")
-//            }
-//            .addOnFailureListener { e ->
-//                Log.e("TestDavid", "Error adding device to Firestore", e)
-//            }
     }
 }
 
