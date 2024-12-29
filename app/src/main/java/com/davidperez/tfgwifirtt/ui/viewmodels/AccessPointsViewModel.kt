@@ -156,7 +156,9 @@ class AccessPointsViewModel @Inject constructor(
             appendLine("Timestamp,Device,Android Version,AP MAC Address,Status,Distance (mm),Std Dev (mm),Attempted Measurements,Successful Measurements,Bandwidth,Frequency (MHz)")
             for (result in rttRangingResults) {
                 if (result.status == RangingResult.STATUS_SUCCESS) {
-                    appendLine("${result.rangingTimestampMillis},${Build.MANUFACTURER + Build.MODEL},${Build.VERSION.RELEASE},${result.macAddress.toString()},${result.status},${result.distanceMm},${result.distanceStdDevMm},${result.numAttemptedMeasurements},${result.numSuccessfulMeasurements}")
+                    val bandwidth = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) result.measurementBandwidth else "Requires Android >= 14"
+                    val frequency = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) result.measurementChannelFrequencyMHz else "Requires Android >= 14"
+                    appendLine("${result.rangingTimestampMillis},${Build.MANUFACTURER + Build.MODEL},${Build.VERSION.RELEASE},${result.macAddress.toString()},${result.status},${result.distanceMm},${result.distanceStdDevMm},${result.numAttemptedMeasurements},${result.numSuccessfulMeasurements},${bandwidth},${frequency}")
                 } else {
                     appendLine(",${Build.MANUFACTURER + Build.MODEL},${Build.VERSION.RELEASE},${result.macAddress.toString()},${result.status},,,,")
                 }

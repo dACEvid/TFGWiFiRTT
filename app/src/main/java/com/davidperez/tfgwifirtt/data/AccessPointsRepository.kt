@@ -185,7 +185,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
                     for (result in results) {
                         appendLine()
                         if (result.status == RangingResult.STATUS_SUCCESS) {
-                            append("Status: " + result.status.toString() + " MAC: " + result.macAddress.toString() + " Distance (mm): " + result.distanceMm.toString() + " Std Dev (mm): " + result.distanceStdDevMm.toString())
+                            append("MAC: " + result.macAddress.toString() + " Distance (mm): " + result.distanceMm.toString() + " Std Dev (mm): " + result.distanceStdDevMm.toString())
                         } else {
                             append("RTT failed for MAC " + result.macAddress.toString())
                         }
