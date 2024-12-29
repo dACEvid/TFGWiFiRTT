@@ -65,6 +65,11 @@ interface AccessPointsRepository {
     /**
      * Observe the loading status
      */
+    fun observeShowPermissionsDialog(): Flow<Boolean>
+
+    /**
+     * Observe the loading status
+     */
     fun observeIsLoading(): Flow<Boolean>
 
     /**
@@ -79,7 +84,9 @@ interface AccessPointsRepository {
 
     suspend fun startRTTRanging(selectedForRTT: Set<ScanResult>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean, saveOnlyLastRttOperation: Boolean)
 
-    suspend fun removeRTTResultDialog()
+    suspend fun removeDialogs()
+
+    suspend fun showPermissionsDialog()
 }
 
 class AccessPointsRepositoryImpl @Inject constructor(private val application: Application) : AccessPointsRepository {
@@ -87,6 +94,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
     private val accessPointsList = MutableStateFlow<List<AccessPoint>>(emptyList())
     private val rttRangingResults = MutableStateFlow<List<RangingResult>>(emptyList())
     private val rttResultDialogText = MutableStateFlow("")
+    private val showPermissionsDialog = MutableStateFlow(false)
     private val isLoading = MutableStateFlow(false)
 
     var locationManager: LocationManager = this.application.getSystemService(Context.LOCATION_SERVICE) as LocationManager // Initialize LocationManager
@@ -146,6 +154,8 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
     override fun observeRTTRangingResults(): Flow<List<RangingResult>> = rttRangingResults.asStateFlow()
 
     override fun observeRTTResultDialogText(): Flow<String> = rttResultDialogText.asStateFlow()
+
+    override fun observeShowPermissionsDialog(): Flow<Boolean> = showPermissionsDialog.asStateFlow()
 
     override fun observeIsLoading(): Flow<Boolean> = isLoading.asStateFlow()
 
@@ -222,8 +232,13 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         }
     }
 
-    override suspend fun removeRTTResultDialog() {
+    override suspend fun showPermissionsDialog() {
+        showPermissionsDialog.value = true
+    }
+
+    override suspend fun removeDialogs() {
         rttResultDialogText.value = ""
+        showPermissionsDialog.value = false
     }
 
     private fun saveCompatibleDevice() {

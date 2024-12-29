@@ -1,5 +1,8 @@
 package com.davidperez.tfgwifirtt.ui.screens
 
+import android.Manifest
+import android.app.Activity
+import android.content.pm.PackageManager
 import android.net.wifi.ScanResult
 import android.net.wifi.rtt.RangingResult
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -32,6 +35,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.davidperez.tfgwifirtt.model.AccessPoint
 import com.davidperez.tfgwifirtt.model.UserSettings
@@ -46,20 +51,45 @@ fun AccessPointsListScreen(
     // State to hold the scan results
     val accessPointsUiState by accessPointsViewModel.uiState.collectAsState()
 
+    val context = LocalContext.current
+
     AccessPoints(
         accessPointsList = accessPointsUiState.accessPointsList,
         selectedForRTT = accessPointsUiState.selectedForRTT,
         rttRangingResults = accessPointsUiState.rttRangingResults,
         isLoading = accessPointsUiState.isLoading,
-        onStartScan = { accessPointsViewModel.refreshAccessPoints() },
+        onStartScan = {
+            if (checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)  {
+                accessPointsViewModel.showPermissionsDialog()
+            } else {
+                accessPointsViewModel.refreshAccessPoints()
+            }
+        },
         onToggleSelectionForRTT = { accessPointsViewModel.toggleSelectionForRTT(it) },
         onStartRTTRanging = { selectedForRTT, performContinuousRttRanging, rttPeriod, rttInterval, saveRttResults, saveOnlyLastRttOperation -> accessPointsViewModel.startRTTRanging(selectedForRTT, performContinuousRttRanging, rttPeriod, rttInterval, saveRttResults, saveOnlyLastRttOperation) },
         onExportRTTRangingResultsToCsv = { accessPointsViewModel.exportRTTRangingResultsToCsv(it) },
         userSettings = accessPointsUiState.userSettings
     )
 
+    RequestPermissionsDialog(
+        onAccept = {
+            ActivityCompat.requestPermissions(
+                context as Activity,
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.NEARBY_WIFI_DEVICES
+                ),
+                1
+            )
+            accessPointsViewModel.removeDialogs()
+        },
+        onReject = { accessPointsViewModel.removeDialogs() },
+        showDialog = accessPointsUiState.showPermissionsDialog
+    )
+
     RTTResultDialog(
-        onComplete = { accessPointsViewModel.removeRTTResultDialog() },
+        onComplete = { accessPointsViewModel.removeDialogs() },
         dialogText = accessPointsUiState.rttResultDialogText,
         icon = Icons.Default.Info
     )
@@ -256,3 +286,41 @@ fun RTTResultDialog(
     }
 }
 
+@Composable
+fun RequestPermissionsDialog(
+    onAccept: () -> Unit,
+    onReject: () -> Unit,
+    showDialog: Boolean
+) {
+    if (showDialog) {
+        AlertDialog(
+            title = {
+                Text(text = "Extra permissions required")
+            },
+            text = {
+                Text(text = "This app needs access to your device's location to scan nearby access points.")
+            },
+            onDismissRequest = {
+                onReject()
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onAccept()
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        onReject()
+                    }
+                ) {
+                    Text("No, Thanks")
+                }
+            }
+        )
+    }
+}

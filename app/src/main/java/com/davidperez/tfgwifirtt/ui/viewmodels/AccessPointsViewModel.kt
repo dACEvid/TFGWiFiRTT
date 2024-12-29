@@ -26,6 +26,7 @@ data class AccessPointsUiState(
     val selectedForRTT: Set<ScanResult> = emptySet(),
     val rttRangingResults: List<RangingResult> = emptyList(),
     val rttResultDialogText: String = "",
+    val showPermissionsDialog: Boolean = false,
     val isLoading: Boolean = false
 )
 
@@ -45,6 +46,7 @@ class AccessPointsViewModel @Inject constructor(
         observeSelectedForRTT() // Observe for changes in the selected APs for RTT
         observeRTTRangingResults()
         observeRTTResultDialogText()
+        observeShowPermissionsDialog()
         observeIsLoading()
         observeUserSettings()
     }
@@ -109,6 +111,18 @@ class AccessPointsViewModel @Inject constructor(
         }
     }
 
+    private fun observeShowPermissionsDialog() {
+        viewModelScope.launch {
+            accessPointsRepository.observeShowPermissionsDialog().collect { showPermissionsDialogObserved ->
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        showPermissionsDialog = showPermissionsDialogObserved
+                    )
+                }
+            }
+        }
+    }
+
     private fun observeIsLoading() {
         viewModelScope.launch {
             accessPointsRepository.observeIsLoading().collect { isLoadingObserved ->
@@ -167,9 +181,15 @@ class AccessPointsViewModel @Inject constructor(
         return csvContent
     }
 
-    fun removeRTTResultDialog() {
+    fun removeDialogs() {
         viewModelScope.launch {
-            accessPointsRepository.removeRTTResultDialog()
+            accessPointsRepository.removeDialogs()
+        }
+    }
+
+    fun showPermissionsDialog() {
+        viewModelScope.launch {
+            accessPointsRepository.showPermissionsDialog()
         }
     }
 }

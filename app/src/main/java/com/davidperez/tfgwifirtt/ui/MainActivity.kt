@@ -1,11 +1,6 @@
 package com.davidperez.tfgwifirtt.ui
 
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import android.location.LocationManager
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -47,8 +42,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        requestNeededPermissions()
-
         setContent {
             TFGWiFiRTTTheme {
                 Surface(
@@ -58,22 +51,6 @@ class MainActivity : ComponentActivity() {
                     MyAppNav()
                 }
             }
-        }
-    }
-
-    private fun requestNeededPermissions() {
-        // Permissions needed for a successful call to startScan()
-        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
-        }
-        if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION), 1)
-        }
-
-        // Permission needed for performing a RTT ranging request (only for Android 13 or higher)
-        // TODO: request this at runtime when the user wants to perform the RTT ranging request
-        if (checkSelfPermission(Manifest.permission.NEARBY_WIFI_DEVICES) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(Manifest.permission.NEARBY_WIFI_DEVICES), 1)
         }
     }
 }
