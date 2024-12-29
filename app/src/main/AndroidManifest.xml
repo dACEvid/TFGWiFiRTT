@@ -6,11 +6,11 @@
     <uses-feature android:name="android.hardware.wifi.rtt" />
 
     <!-- Permissions for WiFi RTT -->
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
-    <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" /> <!-- needed for a successful call to getScanResults() -->
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" /> <!-- needed for a successful call to startScan() -->
+    <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" /> <!-- needed for making RTT ranging requests in Android >= 13 -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!-- must be requested together with ACCESS_FINE_LOCATION -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> <!-- needed for a successful call to startScan() -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <!-- For Firebase -->

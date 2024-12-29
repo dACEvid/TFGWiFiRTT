@@ -69,14 +69,6 @@ class MainActivity : ComponentActivity() {
         if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION), 1)
         }
-        if (checkSelfPermission(Manifest.permission.CHANGE_WIFI_STATE) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(Manifest.permission.CHANGE_WIFI_STATE), 1)
-        }
-
-        // Permission needed for a successful call to getScanResults()
-        if (checkSelfPermission(Manifest.permission.ACCESS_WIFI_STATE) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(Manifest.permission.ACCESS_WIFI_STATE), 1)
-        }
 
         // Permission needed for performing a RTT ranging request (only for Android 13 or higher)
         // TODO: request this at runtime when the user wants to perform the RTT ranging request
