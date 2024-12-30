@@ -7,6 +7,7 @@ import android.net.wifi.ScanResult
 import android.net.wifi.rtt.RangingResult
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Switch
@@ -30,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -59,7 +62,7 @@ fun AccessPointsListScreen(
         rttRangingResults = accessPointsUiState.rttRangingResults,
         isLoading = accessPointsUiState.isLoading,
         onStartScan = {
-            if (checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)  {
+            if (checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)  {
                 accessPointsViewModel.showPermissionsDialog()
             } else {
                 accessPointsViewModel.refreshAccessPoints()
@@ -295,10 +298,16 @@ fun RequestPermissionsDialog(
     if (showDialog) {
         AlertDialog(
             title = {
-                Text(text = "Extra permissions required")
+                Text(
+                    text = "Extra permissions required",
+                    textAlign = TextAlign.Center
+                )
             },
             text = {
-                Text(text = "This app needs access to your device's location to scan nearby access points.")
+                Text(
+                    text = "This app needs access to your device's location to scan nearby access points.",
+                    textAlign = TextAlign.Center
+                )
             },
             onDismissRequest = {
                 onReject()
@@ -307,7 +316,9 @@ fun RequestPermissionsDialog(
                 TextButton(
                     onClick = {
                         onAccept()
-                    }
+                    },
+                    border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
+                    modifier = Modifier.fillMaxWidth(0.45f)
                 ) {
                     Text("OK")
                 }
@@ -316,7 +327,9 @@ fun RequestPermissionsDialog(
                 TextButton(
                     onClick = {
                         onReject()
-                    }
+                    },
+                    border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
+                    modifier = Modifier.fillMaxWidth(0.45f)
                 ) {
                     Text("No, Thanks")
                 }
