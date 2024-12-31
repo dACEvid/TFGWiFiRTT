@@ -42,6 +42,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.davidperez.tfgwifirtt.model.AccessPoint
+import com.davidperez.tfgwifirtt.model.RangingResultWithTimestamps
 import com.davidperez.tfgwifirtt.model.UserSettings
 import com.davidperez.tfgwifirtt.ui.components.LoadingIndicator
 import com.davidperez.tfgwifirtt.ui.components.ScreenTitle
@@ -103,12 +104,12 @@ fun AccessPointsListScreen(
 private fun AccessPoints(
     accessPointsList: List<AccessPoint>,
     selectedForRTT: Set<ScanResult>,
-    rttRangingResults: List<RangingResult>,
+    rttRangingResults: List<RangingResultWithTimestamps>,
     isLoading: Boolean,
     onStartScan: () -> Unit,
     onToggleSelectionForRTT: (ScanResult) -> Unit,
     onStartRTTRanging: (Set<ScanResult>, Boolean, Long, Long, Boolean, Boolean) -> Unit,
-    onExportRTTRangingResultsToCsv: (List<RangingResult>) -> String,
+    onExportRTTRangingResultsToCsv: (List<RangingResultWithTimestamps>) -> String,
     userSettings: UserSettings,
     modifier: Modifier = Modifier,
 ) {

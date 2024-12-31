@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.davidperez.tfgwifirtt.data.AccessPointsRepository
 import com.davidperez.tfgwifirtt.data.UserSettingsRepository
 import com.davidperez.tfgwifirtt.model.AccessPoint
+import com.davidperez.tfgwifirtt.model.RangingResultWithTimestamps
 import com.davidperez.tfgwifirtt.model.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +25,7 @@ data class AccessPointsUiState(
     val accessPointsList: List<AccessPoint> = emptyList(),
     val userSettings: UserSettings = UserSettings(),
     val selectedForRTT: Set<ScanResult> = emptySet(),
-    val rttRangingResults: List<RangingResult> = emptyList(),
+    val rttRangingResults: List<RangingResultWithTimestamps> = emptyList(),
     val rttResultDialogText: String = "",
     val showPermissionsDialog: Boolean = false,
     val isLoading: Boolean = false
@@ -165,16 +166,20 @@ class AccessPointsViewModel @Inject constructor(
     /**
      * Export RTT results to CSV
      */
-    fun exportRTTRangingResultsToCsv(rttRangingResults: List<RangingResult>): String {
+    fun exportRTTRangingResultsToCsv(rttRangingResults: List<RangingResultWithTimestamps>): String {
         val csvContent = buildString {
-            appendLine("Timestamp,Device,Android Version,AP MAC Address,Status,Distance (mm),Std Dev (mm),Attempted Measurements,Successful Measurements,Bandwidth,Frequency (MHz)")
+            appendLine("Request Start Unix Timestamp,Request Completed Unix Timestamp,Time Since System Boot (ms),Device,Android Version,AP MAC Address,Status,Distance (mm),Std Dev (mm),Attempted Measurements,Successful Measurements,Bandwidth,Frequency (MHz),Average RSSI (dbM)")
             for (result in rttRangingResults) {
-                if (result.status == RangingResult.STATUS_SUCCESS) {
-                    val bandwidth = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) result.measurementBandwidth else "Requires Android >= 14"
-                    val frequency = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) result.measurementChannelFrequencyMHz else "Requires Android >= 14"
-                    appendLine("${result.rangingTimestampMillis},${Build.MANUFACTURER + Build.MODEL},${Build.VERSION.RELEASE},${result.macAddress.toString()},${result.status},${result.distanceMm},${result.distanceStdDevMm},${result.numAttemptedMeasurements},${result.numSuccessfulMeasurements},${bandwidth},${frequency}")
-                } else {
-                    appendLine(",${Build.MANUFACTURER + Build.MODEL},${Build.VERSION.RELEASE},${result.macAddress.toString()},${result.status},,,,")
+                for (r in result.results) {
+                    if (r.status == RangingResult.STATUS_SUCCESS) {
+                        val bandwidth =
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) r.measurementBandwidth else "Requires Android >= 14"
+                        val frequency =
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) r.measurementChannelFrequencyMHz else "Requires Android >= 14"
+                        appendLine("${result.startTime},${result.endTime},${r.rangingTimestampMillis},${Build.MANUFACTURER + Build.MODEL},${Build.VERSION.RELEASE},${r.macAddress.toString()},${r.status},${r.distanceMm},${r.distanceStdDevMm},${r.numAttemptedMeasurements},${r.numSuccessfulMeasurements},${bandwidth},${frequency},${r.rssi}")
+                    } else {
+                        appendLine("${result.startTime},,,${Build.MANUFACTURER + Build.MODEL},${Build.VERSION.RELEASE},${r.macAddress.toString()},${r.status},,,,,")
+                    }
                 }
             }
         }
