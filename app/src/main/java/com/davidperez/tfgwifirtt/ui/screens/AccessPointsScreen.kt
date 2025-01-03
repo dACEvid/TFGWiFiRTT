@@ -319,7 +319,7 @@ fun RequestPermissionsDialog(
                         onAccept()
                     },
                     border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
-                    modifier = Modifier.fillMaxWidth(0.45f)
+                    modifier = Modifier.fillMaxWidth(0.48f)
                 ) {
                     Text("OK")
                 }
@@ -330,7 +330,7 @@ fun RequestPermissionsDialog(
                         onReject()
                     },
                     border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
-                    modifier = Modifier.fillMaxWidth(0.45f)
+                    modifier = Modifier.fillMaxWidth(0.48f)
                 ) {
                     Text("No, Thanks")
                 }

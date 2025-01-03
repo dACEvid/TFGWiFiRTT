@@ -81,7 +81,7 @@ interface AccessPointsRepository {
     /**
      * Create RTT ranging request for the selected APs
      */
-    suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>, saveRttResults: Boolean, saveOnlyLastRttOperation: Boolean, startTime: Long)
+    suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>, saveRttResults: Boolean, startTime: Long)
 
     suspend fun startRTTRanging(selectedForRTT: Set<ScanResult>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean, saveOnlyLastRttOperation: Boolean)
 
@@ -175,7 +175,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
     }
 
     @SuppressLint("MissingPermission")
-    override suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>, saveRttResults: Boolean, saveOnlyLastRttOperation: Boolean, startTime: Long) {
+    override suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>, saveRttResults: Boolean, startTime: Long) {
         wifiRTTManager = this.application.getSystemService(Context.WIFI_RTT_RANGING_SERVICE) as WifiRttManager // Initialize WifiRttManager
         // Create a ranging request
         val req: RangingRequest = RangingRequest.Builder().run {
@@ -187,9 +187,6 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
             // Callback that triggers when the ranging operation completes
             override fun onRangingResults(results: List<RangingResult>) {
                 if (saveRttResults) {
-                    if (saveOnlyLastRttOperation) {
-                        rttRangingResults.value = emptyList()
-                    }
                     rttRangingResults.update { it + RangingResultWithTimestamps(startTime, System.currentTimeMillis(), results) } // Save results to export to CSV if user setting is enabled
                 }
                 val resultsStr = buildString {
@@ -221,15 +218,19 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
             saveCompatibleDevice()
         }
 
+        if (saveOnlyLastRttOperation) {
+            rttRangingResults.value = emptyList()
+        }
+
         if (performContinuousRttRanging) {
             val endTime = System.currentTimeMillis() + rttPeriod
             while (System.currentTimeMillis() < endTime) {
-                createRTTRangingRequest(selectedForRTT, saveRttResults, saveOnlyLastRttOperation, System.currentTimeMillis())
+                createRTTRangingRequest(selectedForRTT, saveRttResults, System.currentTimeMillis())
                 delay(rttInterval) // Delay between requests
             }
             rttResultDialogText.value = "Continuous RTT Ranging finished"
         } else {
-            createRTTRangingRequest(selectedForRTT, saveRttResults, saveOnlyLastRttOperation, System.currentTimeMillis())
+            createRTTRangingRequest(selectedForRTT, saveRttResults, System.currentTimeMillis())
         }
     }
 
