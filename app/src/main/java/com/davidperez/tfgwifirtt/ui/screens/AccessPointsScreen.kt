@@ -128,7 +128,7 @@ private fun AccessPoints(
     )
 
     var accessPointsToShow: List<AccessPoint> = accessPointsList
-    val rttCompatibleAccessPoints = accessPointsList.filter { it.isWifiRTTCompatibleMc }
+    val rttCompatibleAccessPoints = accessPointsList.filter { it.isWifiRTTCompatibleMc || it.isWifiRTTCompatibleAz == true }
 
     if (userSettings.showOnlyRttCompatibleAps ) {
         accessPointsToShow = rttCompatibleAccessPoints
