@@ -113,7 +113,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
 
             scanResultList = wifiManager.scanResults
             isLoading.value = false
-            accessPointsList.value = scanResultList.map { sr -> AccessPoint(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) sr.wifiSsid.toString() else sr.SSID, sr.BSSID, sr.is80211mcResponder, sr) }
+            accessPointsList.value = scanResultList.map { sr -> AccessPoint(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) sr.wifiSsid.toString() else sr.SSID, sr.BSSID, sr.is80211mcResponder, if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) sr.is80211azNtbResponder else null, sr) }
         }
     }
 
@@ -211,11 +211,14 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
 
     override suspend fun startRTTRanging(selectedForRTT: Set<ScanResult>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean, saveOnlyLastRttOperation: Boolean) {
         // Check whether the device supports WiFi RTT
-        if (!this.application.packageManager.hasSystemFeature(PackageManager.FEATURE_WIFI_RTT)) {
+        val supportsRttMc = this.application.packageManager.hasSystemFeature(PackageManager.FEATURE_WIFI_RTT)
+        val supportsRttAz = Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && wifiRTTManager.rttCharacteristics.getBoolean(WifiRttManager.CHARACTERISTICS_KEY_BOOLEAN_NTB_INITIATOR)
+        if (!supportsRttMc && !supportsRttAz) {
             rttResultDialogText.value = "Device does not support WiFi RTT"
             return
         } else {
-            saveCompatibleDevice()
+            if (supportsRttMc) saveCompatibleDevice("mc")
+            if (supportsRttAz) saveCompatibleDevice("az")
         }
 
         if (saveOnlyLastRttOperation) {
@@ -243,17 +246,18 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         showPermissionsDialog.value = false
     }
 
-    private fun saveCompatibleDevice() {
+    private fun saveCompatibleDevice(standard: String) {
         // The device information will be stored in Firestore
         val db = Firebase.firestore
         val device = RTTCompatibleDevice(
             lastChecked = System.currentTimeMillis().toInt(),
             model = Build.MODEL,
             manufacturer = Build.MANUFACTURER,
-            androidVersion = Build.VERSION.RELEASE
+            androidVersion = Build.VERSION.RELEASE,
+            standard = standard
         )
 
-        val compositeId = "${device.manufacturer}-${device.model}-${device.androidVersion}"
+        val compositeId = "${device.manufacturer}-${device.model}-${device.androidVersion}-${device.standard}"
         db.collection("compatible-devices")
             .document(compositeId)
             .set(device)

@@ -128,7 +128,7 @@ private fun AccessPoints(
     )
 
     var accessPointsToShow: List<AccessPoint> = accessPointsList
-    val rttCompatibleAccessPoints = accessPointsList.filter { it.isWifiRTTCompatible }
+    val rttCompatibleAccessPoints = accessPointsList.filter { it.isWifiRTTCompatibleMc }
 
     if (userSettings.showOnlyRttCompatibleAps ) {
         accessPointsToShow = rttCompatibleAccessPoints
@@ -224,14 +224,22 @@ fun AccessPointItem(
                     fontWeight = FontWeight.Bold
                 )
             }
+            // TODOL add compatibility "badges" to AP card
             Row {
-                Text("Supports RTT: ")
+                Text("Supports RTT (802.11mc): ")
                 Text(
-                    text = ap.isWifiRTTCompatible.toString(),
+                    text = ap.isWifiRTTCompatibleMc.toString(),
                     fontWeight = FontWeight.Bold
                 )
             }
-            if (ap.isWifiRTTCompatible) {
+            Row {
+                Text("Supports RTT (802.11az): ")
+                Text(
+                    text = if (ap.isWifiRTTCompatibleAz != null) ap.isWifiRTTCompatibleAz.toString() else "Unknown", // TODO: show tooltip explaining that Android >= 15 is needed to check
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            if (ap.isWifiRTTCompatibleMc || ap.isWifiRTTCompatibleAz == true) {
                 Spacer(modifier = Modifier.height(20.dp))
                 Text("Select for RTT")
                 Switch(

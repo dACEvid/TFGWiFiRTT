@@ -28,6 +28,8 @@ fun CompatibleDevicesListScreen(
 ) {
     val rttCompatibleDevicesUiState by rttCompatibleDevicesViewModel.uiState.collectAsState()
 
+    // TODO: add filters by standard, manufacturer, etc.
+
     LazyColumn {
         stickyHeader {
             ScreenTitle("RTT-capable Devices")
