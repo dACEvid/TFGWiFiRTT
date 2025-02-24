@@ -13,4 +13,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "TFG WiFi RTT"
-include ':app'
+include(":app")
