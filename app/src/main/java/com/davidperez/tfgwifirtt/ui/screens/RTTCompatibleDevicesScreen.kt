@@ -28,7 +28,7 @@ fun CompatibleDevicesListScreen(
 ) {
     val rttCompatibleDevicesUiState by rttCompatibleDevicesViewModel.uiState.collectAsState()
 
-    // TODO: add filters by standard, manufacturer, etc.
+    // TODO: add filters by standard, manufacturer, etc. Check Chip Compose component
 
     LazyColumn {
         stickyHeader {

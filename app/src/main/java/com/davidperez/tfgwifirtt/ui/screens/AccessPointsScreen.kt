@@ -9,6 +9,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -31,9 +33,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -44,6 +49,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.davidperez.tfgwifirtt.model.AccessPoint
 import com.davidperez.tfgwifirtt.model.RangingResultWithTimestamps
 import com.davidperez.tfgwifirtt.model.UserSettings
+import com.davidperez.tfgwifirtt.ui.components.CompatibilityBadge
 import com.davidperez.tfgwifirtt.ui.components.LoadingIndicator
 import com.davidperez.tfgwifirtt.ui.components.ScreenTitle
 import com.davidperez.tfgwifirtt.ui.viewmodels.AccessPointsViewModel
@@ -207,49 +213,55 @@ fun AccessPointItem(
             .fillMaxWidth()
             .padding(8.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(10.dp)
+        Box(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Row {
-                Text("SSID: ")
-                Text(
-                    text = ap.ssid,
-                    fontWeight = FontWeight.Bold
-                )
+            Column(
+                modifier = Modifier.padding(10.dp)
+            ) {
+                Row {
+                    Text("SSID: ")
+                    Text(
+                        text = ap.ssid,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Row {
+                    Text("BSSID: ")
+                    Text(
+                        text = ap.bssid,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                if (ap.isWifiRTTCompatibleMc || ap.isWifiRTTCompatibleAz == true) {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text("Select for RTT")
+                    Switch(
+                        checked = ap.selectedForRTT,
+                        onCheckedChange = {
+                            ap.selectedForRTT = it
+                            onToggleSelectionForRTT(ap.scanResultObject)
+                        },
+                        enabled = true
+                    )
+                }
             }
-            Row {
-                Text("BSSID: ")
-                Text(
-                    text = ap.bssid,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            // TODOL add compatibility "badges" to AP card
-            Row {
-                Text("Supports RTT (802.11mc): ")
-                Text(
-                    text = ap.isWifiRTTCompatibleMc.toString(),
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Row {
-                Text("Supports RTT (802.11az): ")
-                Text(
-                    text = if (ap.isWifiRTTCompatibleAz != null) ap.isWifiRTTCompatibleAz.toString() else "Unknown", // TODO: show tooltip explaining that Android >= 15 is needed to check
-                    fontWeight = FontWeight.Bold
-                )
-            }
+
             if (ap.isWifiRTTCompatibleMc || ap.isWifiRTTCompatibleAz == true) {
-                Spacer(modifier = Modifier.height(20.dp))
-                Text("Select for RTT")
-                Switch(
-                    checked = ap.selectedForRTT,
-                    onCheckedChange = {
-                        ap.selectedForRTT = it
-                        onToggleSelectionForRTT(ap.scanResultObject)
-                    },
-                    enabled = true
-                )
+                // Compatibility Badges
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    if (ap.isWifiRTTCompatibleMc) {
+                        CompatibilityBadge("mc")
+                    }
+                    if (ap.isWifiRTTCompatibleAz == true) {
+                        CompatibilityBadge("az") // TODO: show tooltip explaining that Android >= 15 is needed to check
+                    }
+                }
             }
         }
     }
