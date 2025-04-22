@@ -7,5 +7,5 @@ data class RTTCompatibleDevice(
     val model: String = "TestModel",
     val manufacturer: String = "TestManufacturer",
     val androidVersion: String = "TestVersion",
-    val standard: String
+    val standard: String = "mc"
 )
