@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.davidperez.tfgwifirtt.data.RTTCompatibleDevicesRepository
 import com.davidperez.tfgwifirtt.model.RTTCompatibleDevice
+import com.davidperez.tfgwifirtt.model.RTTCompatibleDevicesFilters
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,10 +14,12 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * UI state for the Access Points
+ * UI state for the RTT-capable devices list screen
  */
 data class RTTCompatibleDevicesUiState(
-    val rttCompatibleDevicesList: List<RTTCompatibleDevice> = emptyList()
+    val rttCompatibleDevicesList: List<RTTCompatibleDevice> = emptyList(),
+    val rttCompatibleDevicesFilters: RTTCompatibleDevicesFilters = RTTCompatibleDevicesFilters(),
+    val rttCompatibleDevicesListFiltered: List<RTTCompatibleDevice> = emptyList()
 )
 
 @HiltViewModel
@@ -39,6 +42,7 @@ class RTTCompatibleDevicesViewModel @Inject constructor(
                         rttCompatibleDevicesList = rttCompatibleDevicesListObserved
                     )
                 }
+                applyRTTCompatibleDevicesFilters(_uiState.value.rttCompatibleDevicesFilters)
             }
         }
     }
@@ -50,6 +54,30 @@ class RTTCompatibleDevicesViewModel @Inject constructor(
         viewModelScope.launch {
             rttCompatibleDevicesRepository.getRTTCompatibleDevices()
         }
+    }
+
+    /**
+     * Functions to update filters
+     */
+    fun updateModelQuery(modelQuery: String) {
+        applyRTTCompatibleDevicesFilters(
+            _uiState.value.rttCompatibleDevicesFilters.copy(
+                modelQuery = modelQuery
+            )
+        )
+    }
+
+    private fun applyRTTCompatibleDevicesFilters(filters: RTTCompatibleDevicesFilters = RTTCompatibleDevicesFilters()): List<RTTCompatibleDevice> {
+        _uiState.update { currentState ->
+            val filtered = currentState.rttCompatibleDevicesList.filter { item ->
+                item.model.contains(filters.modelQuery, ignoreCase = true)
+            }
+            currentState.copy(
+                rttCompatibleDevicesFilters = filters,
+                rttCompatibleDevicesListFiltered = filtered
+            )
+        }
+        return _uiState.value.rttCompatibleDevicesListFiltered
     }
 
 }
