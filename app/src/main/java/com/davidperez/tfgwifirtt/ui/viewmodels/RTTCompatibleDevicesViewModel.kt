@@ -67,6 +67,14 @@ class RTTCompatibleDevicesViewModel @Inject constructor(
         )
     }
 
+    fun updateAndroidVersionFilter(androidVersion: String?) {
+        applyRTTCompatibleDevicesFilters(
+            _uiState.value.rttCompatibleDevicesFilters.copy(
+                androidVersion = androidVersion
+            )
+        )
+    }
+
     private fun applyRTTCompatibleDevicesFilters(filters: RTTCompatibleDevicesFilters = RTTCompatibleDevicesFilters()): List<RTTCompatibleDevice> {
         _uiState.update { currentState ->
             val filtered = currentState.rttCompatibleDevicesList.filter { item ->
