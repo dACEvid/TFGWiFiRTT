@@ -290,7 +290,7 @@ fun AccessPointItem(
                         CompatibilityBadge("mc")
                     }
                     if (ap.isWifiRTTCompatibleAz == true) {
-                        CompatibilityBadge("az") // TODO: show tooltip explaining that Android >= 15 is needed to check
+                        CompatibilityBadge("az")
                     }
                 }
             }

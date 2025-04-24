@@ -75,10 +75,28 @@ class RTTCompatibleDevicesViewModel @Inject constructor(
         )
     }
 
+    fun toggleMcFilter() {
+        applyRTTCompatibleDevicesFilters(
+            _uiState.value.rttCompatibleDevicesFilters.copy(
+                showMc = !_uiState.value.rttCompatibleDevicesFilters.showMc
+            )
+        )
+    }
+
+    fun toggleAzFilter() {
+        applyRTTCompatibleDevicesFilters(
+            _uiState.value.rttCompatibleDevicesFilters.copy(
+                showAz = !_uiState.value.rttCompatibleDevicesFilters.showAz
+            )
+        )
+    }
+
     private fun applyRTTCompatibleDevicesFilters(filters: RTTCompatibleDevicesFilters = RTTCompatibleDevicesFilters()): List<RTTCompatibleDevice> {
         _uiState.update { currentState ->
             val filtered = currentState.rttCompatibleDevicesList.filter { item ->
-                (item.model + " " + item.manufacturer).contains(filters.deviceQuery, ignoreCase = true) && (filters.androidVersion == null || item.androidVersion == filters.androidVersion)
+                (item.model + " " + item.manufacturer).contains(filters.deviceQuery, ignoreCase = true) &&
+                (filters.androidVersion == null || item.androidVersion == filters.androidVersion) &&
+                ((filters.showMc && item.standard == "mc") || (filters.showAz && item.standard == "az"))
             }
             currentState.copy(
                 rttCompatibleDevicesFilters = filters,
