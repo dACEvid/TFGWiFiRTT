@@ -78,7 +78,7 @@ class RTTCompatibleDevicesViewModel @Inject constructor(
     private fun applyRTTCompatibleDevicesFilters(filters: RTTCompatibleDevicesFilters = RTTCompatibleDevicesFilters()): List<RTTCompatibleDevice> {
         _uiState.update { currentState ->
             val filtered = currentState.rttCompatibleDevicesList.filter { item ->
-                item.model.contains(filters.modelQuery, ignoreCase = true)
+                item.model.contains(filters.modelQuery, ignoreCase = true) && (filters.androidVersion == null || item.androidVersion == filters.androidVersion)
             }
             currentState.copy(
                 rttCompatibleDevicesFilters = filters,
@@ -87,5 +87,4 @@ class RTTCompatibleDevicesViewModel @Inject constructor(
         }
         return _uiState.value.rttCompatibleDevicesListFiltered
     }
-
 }
