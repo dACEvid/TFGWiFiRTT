@@ -48,7 +48,7 @@ fun CompatibleDevicesListScreen(
             FilterSection(
                 filters = rttCompatibleDevicesUiState.rttCompatibleDevicesFilters,
                 rttCompatibleDevicesList = rttCompatibleDevicesUiState.rttCompatibleDevicesList,
-                onModelQueryChanged = { rttCompatibleDevicesViewModel.updateModelQuery(it) },
+                onDeviceQueryChanged = { rttCompatibleDevicesViewModel.updateDeviceQuery(it) },
                 onVersionSelected = { rttCompatibleDevicesViewModel.updateAndroidVersionFilter(it) }
             )
         }
@@ -69,16 +69,9 @@ fun CompatibleDeviceItem(cd: RTTCompatibleDevice) {
             modifier = Modifier.padding(10.dp)
         ) {
             Row {
-                Text("Manufacturer: ")
+                Text("Device: ")
                 Text(
-                    text = cd.manufacturer,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Row {
-                Text("Model: ")
-                Text(
-                    text = cd.model,
+                    text = cd.manufacturer + " " + cd.model,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -98,16 +91,16 @@ fun CompatibleDeviceItem(cd: RTTCompatibleDevice) {
 fun FilterSection(
     filters: RTTCompatibleDevicesFilters,
     rttCompatibleDevicesList: List<RTTCompatibleDevice>,
-    onModelQueryChanged: (String) -> Unit,
+    onDeviceQueryChanged: (String) -> Unit,
     onVersionSelected: (String?) -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(8.dp)
     ) {
         OutlinedTextField(
-            value = filters.modelQuery,
-            onValueChange = { onModelQueryChanged(it) },
-            label = { Text("Search by Model") },
+            value = filters.deviceQuery,
+            onValueChange = { onDeviceQueryChanged(it) },
+            label = { Text("Search by Device") },
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
