@@ -79,7 +79,7 @@ fun MyAppNav(navController: NavHostController = rememberNavController()) {
         topBar = {
             WifiRTTAppBar(
                 currentScreen = currentScreen,
-                canNavigateBack = navController.previousBackStackEntry != null,
+                canNavigateBack = !topLevelRoutes.contains(currentScreen),
                 navigateUp = { navController.navigateUp() }
             )
         },
