@@ -152,8 +152,6 @@ private fun AccessPoints(
     LazyColumn {
         if (accessPointsList.isNotEmpty()) {
             stickyHeader {
-                ScreenTitle("Visible Access Points")
-
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
                     Row(
                         modifier = Modifier
@@ -176,9 +174,6 @@ private fun AccessPoints(
                         )
                     }
                 }
-
-
-
 
                 ScreenTitle("${accessPointsList.size} APs discovered (${rttCompatibleAccessPoints.size} of them are RTT-capable)", true)
             }

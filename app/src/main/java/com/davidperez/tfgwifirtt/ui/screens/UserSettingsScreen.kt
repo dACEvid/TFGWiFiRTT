@@ -36,9 +36,6 @@ fun SettingsScreen(
     val userSettingsUiState by userSettingsViewModel.uiState.collectAsState()
 
     LazyColumn(verticalArrangement = Arrangement.Center) {
-        stickyHeader {
-            ScreenTitle("Settings")
-        }
         item {
             SettingsSectionTitle("General Settings")
         }

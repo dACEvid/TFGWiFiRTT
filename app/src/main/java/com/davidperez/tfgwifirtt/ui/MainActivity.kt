@@ -9,24 +9,31 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -57,19 +64,28 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyAppNav() {
-    val navController = rememberNavController() // Create NavController
+fun MyAppNav(navController: NavHostController = rememberNavController()) {
 
     val topLevelRoutes = listOf(
-        TopLevelRoute("Access Points", "accessPointsList", Icons.Default.Home),
-        TopLevelRoute("RTT-capable Devices", "compatibleDevicesList", Icons.Default.Info),
-        TopLevelRoute("User Preferences", "settings", Icons.Default.Settings)
+        WifiRTTAppScreen("Visible Access Points", "accessPointsList", Icons.Default.Home),
+        WifiRTTAppScreen("RTT-capable Devices", "compatibleDevicesList", Icons.Default.Info),
+        WifiRTTAppScreen("User Preferences", "settings", Icons.Default.Settings)
     )
 
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentScreen = topLevelRoutes.find { it.route == navBackStackEntry?.destination?.route } ?: topLevelRoutes[0]
+
     Scaffold(
+        topBar = {
+            WifiRTTAppBar(
+                currentScreen = currentScreen,
+                canNavigateBack = navController.previousBackStackEntry != null,
+                navigateUp = { navController.navigateUp() }
+            )
+        },
         bottomBar = {
             BottomNavigation(modifier = Modifier.height(80.dp), backgroundColor = MaterialTheme.colorScheme.primary) {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
+
                 val currentDestination = navBackStackEntry?.destination
                 topLevelRoutes.forEach { topLevelRoute ->
                     val isSelected = currentDestination?.route == topLevelRoute.route
@@ -103,5 +119,37 @@ fun MyAppNav() {
     }
 }
 
-data class TopLevelRoute(val name: String, val route: String, val icon: ImageVector)
+/**
+ * Composable that displays the topBar and displays back button if back navigation is possible.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun WifiRTTAppBar(
+    currentScreen: WifiRTTAppScreen,
+    canNavigateBack: Boolean,
+    navigateUp: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    CenterAlignedTopAppBar(
+        title = { Text(currentScreen.name, fontSize = 30.sp, fontWeight = FontWeight.Bold) },
+        colors = TopAppBarDefaults.mediumTopAppBarColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            titleContentColor = MaterialTheme.colorScheme.onPrimary
+        ),
+        modifier = modifier,
+        navigationIcon = {
+            if (canNavigateBack) {
+                IconButton(onClick = navigateUp) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+            }
+        }
+    )
+}
+
+data class WifiRTTAppScreen(val name: String, val route: String, val icon: ImageVector)
 

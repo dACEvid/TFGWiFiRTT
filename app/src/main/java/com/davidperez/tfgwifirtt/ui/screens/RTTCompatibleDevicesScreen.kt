@@ -54,9 +54,6 @@ fun CompatibleDevicesListScreen(
     val rttCompatibleDevicesUiState by rttCompatibleDevicesViewModel.uiState.collectAsState()
 
     LazyColumn {
-        stickyHeader {
-            ScreenTitle("RTT-capable Devices")
-        }
         item {
             FilterSection(
                 filters = rttCompatibleDevicesUiState.rttCompatibleDevicesFilters,
