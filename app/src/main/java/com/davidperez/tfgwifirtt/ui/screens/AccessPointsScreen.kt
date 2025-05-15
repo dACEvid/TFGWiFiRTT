@@ -216,13 +216,12 @@ fun AccessPointItem(
                         fontWeight = FontWeight.Bold
                     )
                 }
-                if (ap.isWifiRTTCompatibleMc || ap.isWifiRTTCompatibleAz == true || true) {
+                if (ap.isWifiRTTCompatibleMc || ap.isWifiRTTCompatibleAz == true) {
                     Spacer(modifier = Modifier.height(20.dp))
                     Text("Select for RTT")
                     Switch(
                         checked = ap.selectedForRTT,
                         onCheckedChange = {
-                            //ap.selectedForRTT = it
                             onToggleSelectionForRTT(ap.scanResultObject)
                         },
                         enabled = true
