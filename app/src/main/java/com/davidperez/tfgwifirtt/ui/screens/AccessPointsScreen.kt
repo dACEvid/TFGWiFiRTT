@@ -4,10 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
 import android.net.wifi.ScanResult
-import android.net.wifi.rtt.RangingResult
 import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -39,10 +36,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -51,7 +45,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.davidperez.tfgwifirtt.model.AccessPoint
-import com.davidperez.tfgwifirtt.model.RangingResultWithTimestamps
 import com.davidperez.tfgwifirtt.model.UserSettings
 import com.davidperez.tfgwifirtt.ui.components.CompatibilityBadge
 import com.davidperez.tfgwifirtt.ui.components.LoadingIndicator
@@ -60,7 +53,8 @@ import com.davidperez.tfgwifirtt.ui.viewmodels.AccessPointsViewModel
 
 @Composable
 fun AccessPointsListScreen(
-    accessPointsViewModel: AccessPointsViewModel = hiltViewModel()
+    accessPointsViewModel: AccessPointsViewModel = hiltViewModel(),
+    onGoToRTTRanging: () -> Unit
 ) {
     // State to hold the scan results
     val accessPointsUiState by accessPointsViewModel.uiState.collectAsState()
@@ -70,7 +64,6 @@ fun AccessPointsListScreen(
     AccessPoints(
         accessPointsList = accessPointsUiState.accessPointsList,
         selectedForRTT = accessPointsUiState.selectedForRTT,
-        rttRangingResults = accessPointsUiState.rttRangingResults,
         isLoading = accessPointsUiState.isLoading,
         onStartScan = {
             if (checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)  {
@@ -80,8 +73,7 @@ fun AccessPointsListScreen(
             }
         },
         onToggleSelectionForRTT = { accessPointsViewModel.toggleSelectionForRTT(it) },
-        onStartRTTRanging = { selectedForRTT, performContinuousRttRanging, rttPeriod, rttInterval, saveRttResults, saveOnlyLastRttOperation -> accessPointsViewModel.startRTTRanging(selectedForRTT, performContinuousRttRanging, rttPeriod, rttInterval, saveRttResults, saveOnlyLastRttOperation) },
-        onExportRTTRangingResultsToCsv = { accessPointsViewModel.exportRTTRangingResultsToCsv(it) },
+        onGoToRTTRanging = { onGoToRTTRanging() },
         userSettings = accessPointsUiState.userSettings
     )
 
@@ -101,12 +93,6 @@ fun AccessPointsListScreen(
         onReject = { accessPointsViewModel.removeDialogs() },
         showDialog = accessPointsUiState.showPermissionsDialog
     )
-
-    RTTResultDialog(
-        onComplete = { accessPointsViewModel.removeDialogs() },
-        dialogText = accessPointsUiState.rttResultDialogText,
-        icon = Icons.Default.Info
-    )
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -114,28 +100,13 @@ fun AccessPointsListScreen(
 private fun AccessPoints(
     accessPointsList: List<AccessPoint>,
     selectedForRTT: Set<ScanResult>,
-    rttRangingResults: List<RangingResultWithTimestamps>,
     isLoading: Boolean,
     onStartScan: () -> Unit,
     onToggleSelectionForRTT: (ScanResult) -> Unit,
-    onStartRTTRanging: (Set<ScanResult>, Boolean, Long, Long, Boolean, Boolean) -> Unit,
-    onExportRTTRangingResultsToCsv: (List<RangingResultWithTimestamps>) -> String,
+    onGoToRTTRanging: () -> Unit,
     userSettings: UserSettings,
     modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
-
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("text/csv"),
-        onResult = { uri ->
-            uri?.let {
-                context.contentResolver.openOutputStream(it)?.use { outputStream ->
-                    val csvContent = onExportRTTRangingResultsToCsv(rttRangingResults)
-                    outputStream.write(csvContent.toByteArray())
-                }
-            }
-        }
-    )
 
     var accessPointsToShow: List<AccessPoint> = accessPointsList
     val rttCompatibleAccessPoints = accessPointsList.filter { it.isWifiRTTCompatibleMc || it.isWifiRTTCompatibleAz == true }
@@ -184,33 +155,19 @@ private fun AccessPoints(
         if (selectedForRTT.isNotEmpty()) {
             item {
                 OutlinedButton(
-                    onClick = { onStartRTTRanging(selectedForRTT, userSettings.performContinuousRttRanging, userSettings.rttPeriod * 1000, userSettings.rttInterval, userSettings.saveRttResults, userSettings.saveOnlyLastRttOperation) },
+                    onClick = { onGoToRTTRanging() },
                     modifier
                         .padding(5.dp)
                         .fillMaxSize()
                 ) {
                     Text(
-                        "Start RTT Ranging",
+                        "Go to RTT Ranging",
                         textAlign = TextAlign.Center
                     )
                 }
             }
         }
-        if (rttRangingResults.isNotEmpty()) {
-            item {
-                OutlinedButton(
-                    onClick = { launcher.launch("rtt_ranging_results_${System.currentTimeMillis()}.csv") },
-                    modifier
-                        .padding(5.dp)
-                        .fillMaxSize()
-                ) {
-                    Text(
-                        "Export RTT results to CSV",
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-        }
+
         item {
             OutlinedButton(
                 onClick = onStartScan,
@@ -259,13 +216,13 @@ fun AccessPointItem(
                         fontWeight = FontWeight.Bold
                     )
                 }
-                if (ap.isWifiRTTCompatibleMc || ap.isWifiRTTCompatibleAz == true) {
+                if (ap.isWifiRTTCompatibleMc || ap.isWifiRTTCompatibleAz == true || true) {
                     Spacer(modifier = Modifier.height(20.dp))
                     Text("Select for RTT")
                     Switch(
                         checked = ap.selectedForRTT,
                         onCheckedChange = {
-                            ap.selectedForRTT = it
+                            //ap.selectedForRTT = it
                             onToggleSelectionForRTT(ap.scanResultObject)
                         },
                         enabled = true

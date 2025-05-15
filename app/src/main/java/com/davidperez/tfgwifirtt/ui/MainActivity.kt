@@ -1,5 +1,6 @@
 package com.davidperez.tfgwifirtt.ui
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -25,6 +26,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -32,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -40,8 +43,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.davidperez.tfgwifirtt.ui.screens.AccessPointsListScreen
 import com.davidperez.tfgwifirtt.ui.screens.CompatibleDevicesListScreen
+import com.davidperez.tfgwifirtt.ui.screens.RTTRangingScreen
 import com.davidperez.tfgwifirtt.ui.screens.SettingsScreen
 import com.davidperez.tfgwifirtt.ui.theme.TFGWiFiRTTTheme
+import com.davidperez.tfgwifirtt.ui.viewmodels.AccessPointsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -62,6 +67,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@SuppressLint("UnrememberedGetBackStackEntry")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyAppNav(navController: NavHostController = rememberNavController()) {
@@ -71,9 +77,12 @@ fun MyAppNav(navController: NavHostController = rememberNavController()) {
         WifiRTTAppScreen("RTT-capable Devices", "compatibleDevicesList", Icons.Default.Info),
         WifiRTTAppScreen("User Preferences", "settings", Icons.Default.Settings)
     )
+    val childRoutes = listOf(
+        WifiRTTAppScreen("RTT Results", "rttResults")
+    )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentScreen = topLevelRoutes.find { it.route == navBackStackEntry?.destination?.route } ?: topLevelRoutes[0]
+    val currentScreen = (topLevelRoutes + childRoutes).find { it.route == navBackStackEntry?.destination?.route } ?: topLevelRoutes[0]
 
     Scaffold(
         topBar = {
@@ -112,9 +121,16 @@ fun MyAppNav(navController: NavHostController = rememberNavController()) {
         }
     ) { innerPadding ->
         NavHost(navController = navController, startDestination = "accessPointsList", Modifier.padding(innerPadding)) {
-            composable("accessPointsList") { AccessPointsListScreen() }
+            composable("accessPointsList") { AccessPointsListScreen(onGoToRTTRanging = { navController.navigate("rttResults") } ) }
             composable("compatibleDevicesList") { CompatibleDevicesListScreen() }
             composable("settings") { SettingsScreen() }
+            composable("rttResults") {
+                // Share the same AccessPointsViewModel instance
+                val backStackEntry = remember {
+                    navController.getBackStackEntry("accessPointsList")
+                }
+                RTTRangingScreen(hiltViewModel(backStackEntry))
+            }
         }
     }
 }
@@ -151,5 +167,5 @@ fun WifiRTTAppBar(
     )
 }
 
-data class WifiRTTAppScreen(val name: String, val route: String, val icon: ImageVector)
+data class WifiRTTAppScreen(val name: String, val route: String, val icon: ImageVector = Icons.Default.Home)
 

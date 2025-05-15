@@ -151,6 +151,12 @@ class AccessPointsViewModel @Inject constructor(
     fun toggleSelectionForRTT(accessPointScanResult: ScanResult) {
         viewModelScope.launch {
             accessPointsRepository.toggleSelectionForRTT(accessPointScanResult)
+            _uiState.update { currentState ->
+                val updatedList = currentState.accessPointsList.map {
+                    if (it.bssid == accessPointScanResult.BSSID) it.copy(selectedForRTT = !it.selectedForRTT) else it
+                }
+                currentState.copy(accessPointsList = updatedList)
+            }
         }
     }
 

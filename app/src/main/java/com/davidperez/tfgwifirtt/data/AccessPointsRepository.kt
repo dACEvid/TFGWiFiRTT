@@ -210,9 +210,12 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
     }
 
     override suspend fun startRTTRanging(selectedForRTT: Set<ScanResult>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean, saveOnlyLastRttOperation: Boolean) {
+        //wifiRTTManager = this.application.getSystemService(Context.WIFI_RTT_RANGING_SERVICE) as WifiRttManager // Initialize WifiRttManager
+
         // Check whether the device supports WiFi RTT
         val supportsRttMc = this.application.packageManager.hasSystemFeature(PackageManager.FEATURE_WIFI_RTT)
-        val supportsRttAz = Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM && wifiRTTManager.rttCharacteristics.getBoolean(WifiRttManager.CHARACTERISTICS_KEY_BOOLEAN_NTB_INITIATOR)
+        //val supportsRttAz = Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM && wifiRTTManager.rttCharacteristics.getBoolean(WifiRttManager.CHARACTERISTICS_KEY_BOOLEAN_NTB_INITIATOR)
+        val supportsRttAz = false // TODO: fix wifiRTTManager not available here
         if (!supportsRttMc && !supportsRttAz) {
             rttResultDialogText.value = "Device does not support WiFi RTT"
             return
