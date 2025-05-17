@@ -3,7 +3,6 @@ package com.davidperez.tfgwifirtt.ui.screens
 import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
-import android.net.wifi.ScanResult
 import android.os.Build
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -99,10 +98,10 @@ fun AccessPointsListScreen(
 @Composable
 private fun AccessPoints(
     accessPointsList: List<AccessPoint>,
-    selectedForRTT: Set<ScanResult>,
+    selectedForRTT: List<AccessPoint>,
     isLoading: Boolean,
     onStartScan: () -> Unit,
-    onToggleSelectionForRTT: (ScanResult) -> Unit,
+    onToggleSelectionForRTT: (AccessPoint) -> Unit,
     onGoToRTTRanging: () -> Unit,
     userSettings: UserSettings,
     modifier: Modifier = Modifier,
@@ -189,7 +188,7 @@ private fun AccessPoints(
 @Composable
 fun AccessPointItem(
     ap: AccessPoint,
-    onToggleSelectionForRTT: (ScanResult) -> Unit
+    onToggleSelectionForRTT: (AccessPoint) -> Unit
 ) {
     OutlinedCard(
         modifier = Modifier
@@ -222,7 +221,7 @@ fun AccessPointItem(
                     Switch(
                         checked = ap.selectedForRTT,
                         onCheckedChange = {
-                            onToggleSelectionForRTT(ap.scanResultObject)
+                            onToggleSelectionForRTT(ap)
                         },
                         enabled = true
                     )

@@ -51,7 +51,7 @@ interface AccessPointsRepository {
     /**
      * Observe the access points that have been selected for RTT
      */
-    fun observeSelectedForRTT(): Flow<Set<ScanResult>>
+    fun observeSelectedForRTT(): Flow<List<AccessPoint>>
 
     /**
      * Observe the results of the RTT Ranging Requests
@@ -74,16 +74,11 @@ interface AccessPointsRepository {
     fun observeIsLoading(): Flow<Boolean>
 
     /**
-     * Toggle an access point to be selected for RTT or not.
-     */
-    suspend fun toggleSelectionForRTT(accessPointScanResult: ScanResult)
-
-    /**
      * Create RTT ranging request for the selected APs
      */
-    suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>, saveRttResults: Boolean, startTime: Long)
+    suspend fun createRTTRangingRequest(selectedForRTT: List<AccessPoint>, saveRttResults: Boolean, startTime: Long)
 
-    suspend fun startRTTRanging(selectedForRTT: Set<ScanResult>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean, saveOnlyLastRttOperation: Boolean)
+    suspend fun startRTTRanging(selectedForRTT: List<AccessPoint>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean, saveOnlyLastRttOperation: Boolean)
 
     suspend fun removeDialogs()
 
@@ -91,7 +86,7 @@ interface AccessPointsRepository {
 }
 
 class AccessPointsRepositoryImpl @Inject constructor(private val application: Application) : AccessPointsRepository {
-    private val selectedForRTT = MutableStateFlow<Set<ScanResult>>(setOf())
+    private val selectedForRTT = MutableStateFlow<List<AccessPoint>>(emptyList())
     private val accessPointsList = MutableStateFlow<List<AccessPoint>>(emptyList())
     private val rttRangingResults = MutableStateFlow<List<RangingResultWithTimestamps>>(emptyList())
     private val rttResultDialogText = MutableStateFlow("")
@@ -114,6 +109,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
             scanResultList = wifiManager.scanResults
             isLoading.value = false
             accessPointsList.value = scanResultList.map { sr -> AccessPoint(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) sr.wifiSsid.toString() else sr.SSID, sr.BSSID, sr.is80211mcResponder, if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) sr.is80211azNtbResponder else null, sr) }
+            selectedForRTT.value = emptyList()
         }
     }
 
@@ -150,7 +146,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
 
     override fun observeAccessPointsList(): Flow<List<AccessPoint>> = accessPointsList.asStateFlow()
 
-    override fun observeSelectedForRTT(): Flow<Set<ScanResult>> = selectedForRTT.asStateFlow()
+    override fun observeSelectedForRTT(): Flow<List<AccessPoint>> = selectedForRTT.asStateFlow()
 
     override fun observeRTTRangingResults(): Flow<List<RangingResultWithTimestamps>> = rttRangingResults.asStateFlow()
 
@@ -160,26 +156,12 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
 
     override fun observeIsLoading(): Flow<Boolean> = isLoading.asStateFlow()
 
-    override suspend fun toggleSelectionForRTT(accessPointScanResult: ScanResult) {
-        selectedForRTT.update {
-            it.addOrRemove(accessPointScanResult)
-        }
-    }
-
-    private fun <E> Set<E>.addOrRemove(element: E): Set<E> {
-        return this.toMutableSet().apply {
-            if (!add(element)) {
-                remove(element)
-            }
-        }.toSet()
-    }
-
     @SuppressLint("MissingPermission")
-    override suspend fun createRTTRangingRequest(selectedForRTT: Set<ScanResult>, saveRttResults: Boolean, startTime: Long) {
+    override suspend fun createRTTRangingRequest(selectedForRTT: List<AccessPoint>, saveRttResults: Boolean, startTime: Long) {
         wifiRTTManager = this.application.getSystemService(Context.WIFI_RTT_RANGING_SERVICE) as WifiRttManager // Initialize WifiRttManager
         // Create a ranging request
         val req: RangingRequest = RangingRequest.Builder().run {
-            addAccessPoints(selectedForRTT.toList())
+            addAccessPoints(selectedForRTT.map { it.scanResultObject })
             build()
         }
         // Request ranging
@@ -209,7 +191,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         })
     }
 
-    override suspend fun startRTTRanging(selectedForRTT: Set<ScanResult>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean, saveOnlyLastRttOperation: Boolean) {
+    override suspend fun startRTTRanging(selectedForRTT: List<AccessPoint>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean, saveOnlyLastRttOperation: Boolean) {
         //wifiRTTManager = this.application.getSystemService(Context.WIFI_RTT_RANGING_SERVICE) as WifiRttManager // Initialize WifiRttManager
 
         // Check whether the device supports WiFi RTT

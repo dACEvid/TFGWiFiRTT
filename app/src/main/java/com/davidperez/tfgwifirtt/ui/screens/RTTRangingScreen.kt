@@ -1,7 +1,5 @@
 package com.davidperez.tfgwifirtt.ui.screens
 
-import android.net.wifi.ScanResult
-import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
@@ -26,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.davidperez.tfgwifirtt.model.AccessPoint
 import com.davidperez.tfgwifirtt.model.RangingResultWithTimestamps
 import com.davidperez.tfgwifirtt.model.UserSettings
 import com.davidperez.tfgwifirtt.ui.viewmodels.AccessPointsViewModel
@@ -54,9 +53,9 @@ fun RTTRangingScreen(
 
 @Composable
 fun RTTResults(
-    selectedForRTT: Set<ScanResult>,
+    selectedForRTT: List<AccessPoint>,
     rttRangingResults: List<RangingResultWithTimestamps>,
-    onStartRTTRanging: (Set<ScanResult>, Boolean, Long, Long, Boolean, Boolean) -> Unit,
+    onStartRTTRanging: (List<AccessPoint>, Boolean, Long, Long, Boolean, Boolean) -> Unit,
     onExportRTTRangingResultsToCsv: (List<RangingResultWithTimestamps>) -> String,
     userSettings: UserSettings,
     modifier: Modifier = Modifier,
@@ -113,8 +112,7 @@ fun RTTResults(
 
 @Composable
 fun RTTResultItem(
-    // TODO: make selectedForRTT a list of AccessPoint, not ScanResult
-    ap: ScanResult
+    ap: AccessPoint
 ) {
     // TODO: show the actual RTT results here, not in a dialog
     OutlinedCard(
@@ -131,14 +129,14 @@ fun RTTResultItem(
                 Column {
                     Text("SSID: ")
                     Text(
-                        text = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) ap.wifiSsid.toString() else ap.SSID,
+                        text = ap.ssid,
                         fontWeight = FontWeight.Bold
                     )
                 }
                 Column {
                     Text("BSSID: ")
                     Text(
-                        text = ap.BSSID,
+                        text = ap.bssid,
                         fontWeight = FontWeight.Bold
                     )
                 }

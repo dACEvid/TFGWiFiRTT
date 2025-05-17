@@ -1,6 +1,5 @@
 package com.davidperez.tfgwifirtt.ui.viewmodels
 
-import android.net.wifi.ScanResult
 import android.net.wifi.rtt.RangingResult
 import android.os.Build
 import androidx.lifecycle.ViewModel
@@ -24,7 +23,7 @@ import javax.inject.Inject
 data class AccessPointsUiState(
     val accessPointsList: List<AccessPoint> = emptyList(),
     val userSettings: UserSettings = UserSettings(),
-    val selectedForRTT: Set<ScanResult> = emptySet(),
+    val selectedForRTT: List<AccessPoint> = emptyList(),
     val rttRangingResults: List<RangingResultWithTimestamps> = emptyList(),
     val rttResultDialogText: String = "",
     val showPermissionsDialog: Boolean = false,
@@ -148,14 +147,13 @@ class AccessPointsViewModel @Inject constructor(
     /**
      * Toggle selection of an access point for RTT
      */
-    fun toggleSelectionForRTT(accessPointScanResult: ScanResult) {
+    fun toggleSelectionForRTT(accessPoint: AccessPoint) {
         viewModelScope.launch {
-            accessPointsRepository.toggleSelectionForRTT(accessPointScanResult)
             _uiState.update { currentState ->
                 val updatedList = currentState.accessPointsList.map {
-                    if (it.bssid == accessPointScanResult.BSSID) it.copy(selectedForRTT = !it.selectedForRTT) else it
+                    if (it.bssid == accessPoint.bssid) it.copy(selectedForRTT = !it.selectedForRTT) else it
                 }
-                currentState.copy(accessPointsList = updatedList)
+                currentState.copy(accessPointsList = updatedList, selectedForRTT = updatedList.filter { it.selectedForRTT })
             }
         }
     }
@@ -163,7 +161,7 @@ class AccessPointsViewModel @Inject constructor(
     /**
      * Start RTT ranging to the selected APs
      */
-    fun startRTTRanging(selectedForRTT: Set<ScanResult>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean, saveOnlyLastRttOperation: Boolean) {
+    fun startRTTRanging(selectedForRTT: List<AccessPoint>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean, saveOnlyLastRttOperation: Boolean) {
         viewModelScope.launch {
             accessPointsRepository.startRTTRanging(selectedForRTT, performContinuousRttRanging, rttPeriod, rttInterval, saveRttResults, saveOnlyLastRttOperation)
         }
