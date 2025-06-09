@@ -18,12 +18,12 @@ fun CompatibilityBadge(label: String, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f))
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Text(
             text = label,
-            color = MaterialTheme.colorScheme.onTertiary,
+            color = MaterialTheme.colorScheme.onPrimary,
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
         )
