@@ -56,7 +56,12 @@ interface AccessPointsRepository {
     /**
      * Observe the results of the RTT Ranging Requests
      */
-    fun observeRTTRangingResults(): Flow<List<RangingResultWithTimestamps>>
+    fun observeRTTRangingResults(): Flow<List<RangingResult>>
+
+    /**
+     * Observe the RTT results to include in export
+     */
+    fun observeRTTRangingResultsForExport(): Flow<List<RangingResultWithTimestamps>>
 
     /**
      * Observe the message to show in the dialog that shows RTT results
@@ -88,7 +93,8 @@ interface AccessPointsRepository {
 class AccessPointsRepositoryImpl @Inject constructor(private val application: Application) : AccessPointsRepository {
     private val selectedForRTT = MutableStateFlow<List<AccessPoint>>(emptyList())
     private val accessPointsList = MutableStateFlow<List<AccessPoint>>(emptyList())
-    private val rttRangingResults = MutableStateFlow<List<RangingResultWithTimestamps>>(emptyList())
+    private val rttRangingResults = MutableStateFlow<List<RangingResult>>(emptyList())
+    private val rttRangingResultsForExport = MutableStateFlow<List<RangingResultWithTimestamps>>(emptyList())
     private val rttResultDialogText = MutableStateFlow("")
     private val showPermissionsDialog = MutableStateFlow(false)
     private val isLoading = MutableStateFlow(false)
@@ -148,7 +154,9 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
 
     override fun observeSelectedForRTT(): Flow<List<AccessPoint>> = selectedForRTT.asStateFlow()
 
-    override fun observeRTTRangingResults(): Flow<List<RangingResultWithTimestamps>> = rttRangingResults.asStateFlow()
+    override fun observeRTTRangingResults(): Flow<List<RangingResult>> = rttRangingResults.asStateFlow()
+
+    override fun observeRTTRangingResultsForExport(): Flow<List<RangingResultWithTimestamps>> = rttRangingResultsForExport.asStateFlow()
 
     override fun observeRTTResultDialogText(): Flow<String> = rttResultDialogText.asStateFlow()
 
@@ -168,20 +176,10 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         wifiRTTManager.startRanging(req, this.application.mainExecutor, object : RangingResultCallback() {
             // Callback that triggers when the ranging operation completes
             override fun onRangingResults(results: List<RangingResult>) {
+                rttRangingResults.value = results
                 if (saveRttResults) {
-                    rttRangingResults.update { it + RangingResultWithTimestamps(startTime, System.currentTimeMillis(), results) } // Save results to export to CSV if user setting is enabled
+                    rttRangingResultsForExport.update { it + RangingResultWithTimestamps(startTime, System.currentTimeMillis(), results) } // Save results to export to CSV if user setting is enabled
                 }
-                val resultsStr = buildString {
-                    for (result in results) {
-                        appendLine()
-                        if (result.status == RangingResult.STATUS_SUCCESS) {
-                            append("MAC: " + result.macAddress.toString() + " Distance (mm): " + result.distanceMm.toString() + " Std Dev (mm): " + result.distanceStdDevMm.toString())
-                        } else {
-                            append("RTT failed for MAC " + result.macAddress.toString())
-                        }
-                    }
-                }
-                rttResultDialogText.value = resultsStr
             }
 
             // Callback that triggers when the whole ranging operation fails
@@ -207,7 +205,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         }
 
         if (saveOnlyLastRttOperation) {
-            rttRangingResults.value = emptyList()
+            rttRangingResultsForExport.value = emptyList()
         }
 
         if (performContinuousRttRanging) {
@@ -216,7 +214,6 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
                 createRTTRangingRequest(selectedForRTT, saveRttResults, System.currentTimeMillis())
                 delay(rttInterval) // Delay between requests
             }
-            rttResultDialogText.value = "Continuous RTT Ranging finished"
         } else {
             createRTTRangingRequest(selectedForRTT, saveRttResults, System.currentTimeMillis())
         }

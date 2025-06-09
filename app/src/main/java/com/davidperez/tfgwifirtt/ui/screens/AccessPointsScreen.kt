@@ -215,7 +215,7 @@ fun AccessPointItem(
                         fontWeight = FontWeight.Bold
                     )
                 }
-                if (ap.isWifiRTTCompatibleMc || ap.isWifiRTTCompatibleAz == true) {
+                if (ap.isWifiRTTCompatibleMc || ap.isWifiRTTCompatibleAz == true || true) {
                     Spacer(modifier = Modifier.height(20.dp))
                     Text("Select for RTT")
                     Switch(
@@ -245,49 +245,6 @@ fun AccessPointItem(
                 }
             }
         }
-    }
-}
-
-
-@Composable
-fun RTTResultDialog(
-    onComplete: () -> Unit,
-    dialogText: String,
-    icon: ImageVector,
-) {
-    if (dialogText != "") {
-        AlertDialog(
-            icon = {
-                Icon(icon, contentDescription = "Example Icon")
-            },
-            title = {
-                Text(text = "RTT Ranging Result")
-            },
-            text = {
-                Text(text = dialogText)
-            },
-            onDismissRequest = {
-                onComplete()
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onComplete()
-                    }
-                ) {
-                    Text("Confirm")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        onComplete()
-                    }
-                ) {
-                    Text("Dismiss")
-                }
-            }
-        )
     }
 }
 

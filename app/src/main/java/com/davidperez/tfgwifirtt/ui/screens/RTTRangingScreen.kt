@@ -1,7 +1,11 @@
 package com.davidperez.tfgwifirtt.ui.screens
 
+import android.net.wifi.ScanResult
+import android.net.wifi.rtt.RangingResult
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,15 +17,22 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.davidperez.tfgwifirtt.model.AccessPoint
@@ -39,6 +50,7 @@ fun RTTRangingScreen(
     RTTResults(
         selectedForRTT = accessPointsUiState.selectedForRTT,
         rttRangingResults = accessPointsUiState.rttRangingResults,
+        rttRangingResultsForExport = accessPointsUiState.rttRangingResultsForExport,
         onStartRTTRanging = { selectedForRTT, performContinuousRttRanging, rttPeriod, rttInterval, saveRttResults, saveOnlyLastRttOperation -> accessPointsViewModel.startRTTRanging(selectedForRTT, performContinuousRttRanging, rttPeriod, rttInterval, saveRttResults, saveOnlyLastRttOperation) },
         onExportRTTRangingResultsToCsv = { accessPointsViewModel.exportRTTRangingResultsToCsv(it) },
         userSettings = accessPointsUiState.userSettings
@@ -52,9 +64,53 @@ fun RTTRangingScreen(
 }
 
 @Composable
+fun RTTResultDialog(
+    onComplete: () -> Unit,
+    dialogText: String,
+    icon: ImageVector,
+) {
+    // TODO: make this dialog an ErrorDialog
+    if (dialogText != "") {
+        AlertDialog(
+            icon = {
+                Icon(icon, contentDescription = "Example Icon")
+            },
+            title = {
+                Text(text = "RTT Ranging Result")
+            },
+            text = {
+                Text(text = dialogText)
+            },
+            onDismissRequest = {
+                onComplete()
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onComplete()
+                    }
+                ) {
+                    Text("Confirm")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        onComplete()
+                    }
+                ) {
+                    Text("Dismiss")
+                }
+            }
+        )
+    }
+}
+
+@Composable
 fun RTTResults(
     selectedForRTT: List<AccessPoint>,
-    rttRangingResults: List<RangingResultWithTimestamps>,
+    rttRangingResults: List<RangingResult>,
+    rttRangingResultsForExport: List<RangingResultWithTimestamps>,
     onStartRTTRanging: (List<AccessPoint>, Boolean, Long, Long, Boolean, Boolean) -> Unit,
     onExportRTTRangingResultsToCsv: (List<RangingResultWithTimestamps>) -> String,
     userSettings: UserSettings,
@@ -67,7 +123,7 @@ fun RTTResults(
         onResult = { uri ->
             uri?.let {
                 context.contentResolver.openOutputStream(it)?.use { outputStream ->
-                    val csvContent = onExportRTTRangingResultsToCsv(rttRangingResults)
+                    val csvContent = onExportRTTRangingResultsToCsv(rttRangingResultsForExport)
                     outputStream.write(csvContent.toByteArray())
                 }
             }
@@ -76,7 +132,7 @@ fun RTTResults(
 
     LazyColumn {
         items(selectedForRTT.toList()) { ap ->
-            RTTResultItem(ap)
+            RTTResultItem(ap, rttRangingResults)
         }
         item {
             OutlinedButton(
@@ -92,7 +148,7 @@ fun RTTResults(
             }
             // TODO: add start/stop RTT Ranging buttons, not just start based on userSettings
         }
-        if (rttRangingResults.isNotEmpty()) {
+        if (rttRangingResultsForExport.isNotEmpty()) {
             item {
                 OutlinedButton(
                     onClick = { launcher.launch("rtt_ranging_results_${System.currentTimeMillis()}.csv") },
@@ -112,35 +168,110 @@ fun RTTResults(
 
 @Composable
 fun RTTResultItem(
-    ap: AccessPoint
+    ap: AccessPoint,
+    rttRangingResults: List<RangingResult>
 ) {
-    // TODO: show the actual RTT results here, not in a dialog
+    val rttResultsForAccessPoint = rttRangingResults.filter { it.macAddress.toString() == ap.bssid && it.status == RangingResult.STATUS_SUCCESS }
+    var rttResult: RangingResult? = null
+    if (rttResultsForAccessPoint.isNotEmpty()) {
+        rttResult = rttResultsForAccessPoint[0]
+    }
+
     OutlinedCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
     ) {
         Box(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().padding(10.dp)
         ) {
-            Row(
-                modifier = Modifier.padding(10.dp)
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Column {
-                    Text("SSID: ")
-                    Text(
-                        text = ap.ssid,
-                        fontWeight = FontWeight.Bold
-                    )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = buildAnnotatedString {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append("SSID: ")
+                        }
+                        append(ap.ssid)
+                    },)
+
+                    Text(text = buildAnnotatedString {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append("BSSID: ")
+                        }
+                        append(ap.bssid)
+                    },)
                 }
-                Column {
-                    Text("BSSID: ")
-                    Text(
-                        text = ap.bssid,
-                        fontWeight = FontWeight.Bold
-                    )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = buildAnnotatedString {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append("Distance (mm): ")
+                        }
+                        append(rttResult?.distanceMm?.toString() ?: "-")
+                    },)
+
+                    Text(text = buildAnnotatedString {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append("Std Dev (mm): ")
+                        }
+                        append(rttResult?.distanceStdDevMm?.toString() ?: "-")
+                    },)
+
+                    Text(text = buildAnnotatedString {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append("RSSI (dbM): ")
+                        }
+                        append(rttResult?.rssi?.toString() ?: "-")
+                    },)
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = buildAnnotatedString {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append("Freq (MHz): ")
+                        }
+                        append(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) rttResult?.measurementChannelFrequencyMHz?.toString() ?: "-" else "Requires Android >= 14")
+                    },)
+
+                    Text(text = buildAnnotatedString {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append("BW (MHz): ")
+                        }
+                        append(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) getBandwidthInMHz(rttResult?.measurementBandwidth) else "Requires Android >= 14")
+                    },)
+
+                    Text(text = buildAnnotatedString {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append("Successful Measurements: ")
+                        }
+                        append((rttResult?.numSuccessfulMeasurements?.toString() ?: "-") + "/" + (rttResult?.numAttemptedMeasurements?.toString() ?: "-"))
+                    },)
                 }
             }
         }
+    }
+}
+
+fun getBandwidthInMHz(bandwidth: Int?): String {
+    return when (bandwidth) {
+        ScanResult.CHANNEL_WIDTH_20MHZ -> "20"
+        ScanResult.CHANNEL_WIDTH_40MHZ -> "40"
+        ScanResult.CHANNEL_WIDTH_80MHZ -> "80"
+        ScanResult.CHANNEL_WIDTH_160MHZ -> "160"
+        ScanResult.CHANNEL_WIDTH_80MHZ_PLUS_MHZ -> "80+80"
+        ScanResult.CHANNEL_WIDTH_320MHZ -> "320"
+        else -> "-"
     }
 }
