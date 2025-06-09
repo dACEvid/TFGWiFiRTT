@@ -17,16 +17,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -38,6 +35,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.davidperez.tfgwifirtt.model.AccessPoint
 import com.davidperez.tfgwifirtt.model.RangingResultWithTimestamps
 import com.davidperez.tfgwifirtt.model.UserSettings
+import com.davidperez.tfgwifirtt.ui.components.ErrorDialog
 import com.davidperez.tfgwifirtt.ui.viewmodels.AccessPointsViewModel
 
 
@@ -56,54 +54,10 @@ fun RTTRangingScreen(
         userSettings = accessPointsUiState.userSettings
     )
 
-    RTTResultDialog(
+    ErrorDialog(
         onComplete = { accessPointsViewModel.removeDialogs() },
-        dialogText = accessPointsUiState.rttResultDialogText,
-        icon = Icons.Default.Info
+        errorMsg = accessPointsUiState.errorMsg
     )
-}
-
-@Composable
-fun RTTResultDialog(
-    onComplete: () -> Unit,
-    dialogText: String,
-    icon: ImageVector,
-) {
-    // TODO: make this dialog an ErrorDialog
-    if (dialogText != "") {
-        AlertDialog(
-            icon = {
-                Icon(icon, contentDescription = "Example Icon")
-            },
-            title = {
-                Text(text = "RTT Ranging Result")
-            },
-            text = {
-                Text(text = dialogText)
-            },
-            onDismissRequest = {
-                onComplete()
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onComplete()
-                    }
-                ) {
-                    Text("Confirm")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        onComplete()
-                    }
-                ) {
-                    Text("Dismiss")
-                }
-            }
-        )
-    }
 }
 
 @Composable
@@ -147,6 +101,7 @@ fun RTTResults(
                 )
             }
             // TODO: add start/stop RTT Ranging buttons, not just start based on userSettings
+            // Add checkbox "use user settings" which is checked by default. If unchecked, "Start RTT Ranging" performs continuous ranging "for ever" and can only be stopped with the stop RTT Ranging button
         }
         if (rttRangingResultsForExport.isNotEmpty()) {
             item {

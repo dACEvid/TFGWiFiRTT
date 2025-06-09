@@ -26,7 +26,7 @@ data class AccessPointsUiState(
     val selectedForRTT: List<AccessPoint> = emptyList(),
     val rttRangingResults: List<RangingResult> = emptyList(),
     val rttRangingResultsForExport: List<RangingResultWithTimestamps> = emptyList(),
-    val rttResultDialogText: String = "",
+    val errorMsg: String = "",
     val showPermissionsDialog: Boolean = false,
     val isLoading: Boolean = false
 )
@@ -47,7 +47,7 @@ class AccessPointsViewModel @Inject constructor(
         observeSelectedForRTT() // Observe for changes in the selected APs for RTT
         observeRTTRangingResults()
         observeRTTRangingResultsForExport()
-        observeRTTResultDialogText()
+        observeErrorMsg()
         observeShowPermissionsDialog()
         observeIsLoading()
         observeUserSettings()
@@ -113,12 +113,12 @@ class AccessPointsViewModel @Inject constructor(
         }
     }
 
-    private fun observeRTTResultDialogText() {
+    private fun observeErrorMsg() {
         viewModelScope.launch {
-            accessPointsRepository.observeRTTResultDialogText().collect { rttResultDialogTextObserved ->
+            accessPointsRepository.observeErrorMsg().collect { errorMsgObserved ->
                 _uiState.update { currentState ->
                     currentState.copy(
-                        rttResultDialogText = rttResultDialogTextObserved
+                        errorMsg = errorMsgObserved
                     )
                 }
             }

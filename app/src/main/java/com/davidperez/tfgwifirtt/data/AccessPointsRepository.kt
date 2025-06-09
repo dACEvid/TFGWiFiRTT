@@ -66,7 +66,7 @@ interface AccessPointsRepository {
     /**
      * Observe the message to show in the dialog that shows RTT results
      */
-    fun observeRTTResultDialogText(): Flow<String>
+    fun observeErrorMsg(): Flow<String>
 
     /**
      * Observe the loading status
@@ -95,7 +95,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
     private val accessPointsList = MutableStateFlow<List<AccessPoint>>(emptyList())
     private val rttRangingResults = MutableStateFlow<List<RangingResult>>(emptyList())
     private val rttRangingResultsForExport = MutableStateFlow<List<RangingResultWithTimestamps>>(emptyList())
-    private val rttResultDialogText = MutableStateFlow("")
+    private val errorMsg = MutableStateFlow("")
     private val showPermissionsDialog = MutableStateFlow(false)
     private val isLoading = MutableStateFlow(false)
 
@@ -158,7 +158,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
 
     override fun observeRTTRangingResultsForExport(): Flow<List<RangingResultWithTimestamps>> = rttRangingResultsForExport.asStateFlow()
 
-    override fun observeRTTResultDialogText(): Flow<String> = rttResultDialogText.asStateFlow()
+    override fun observeErrorMsg(): Flow<String> = errorMsg.asStateFlow()
 
     override fun observeShowPermissionsDialog(): Flow<Boolean> = showPermissionsDialog.asStateFlow()
 
@@ -184,7 +184,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
 
             // Callback that triggers when the whole ranging operation fails
             override fun onRangingFailure(code: Int) {
-                rttResultDialogText.value = "RTT Ranging Request failed"
+                errorMsg.value = "RTT Ranging Request failed"
             }
         })
     }
@@ -197,7 +197,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         //val supportsRttAz = Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM && wifiRTTManager.rttCharacteristics.getBoolean(WifiRttManager.CHARACTERISTICS_KEY_BOOLEAN_NTB_INITIATOR)
         val supportsRttAz = false // TODO: fix wifiRTTManager not available here
         if (!supportsRttMc && !supportsRttAz) {
-            rttResultDialogText.value = "Device does not support WiFi RTT"
+            errorMsg.value = "Device does not support WiFi RTT"
             return
         } else {
             if (supportsRttMc) saveCompatibleDevice("mc")
@@ -224,7 +224,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
     }
 
     override suspend fun removeDialogs() {
-        rttResultDialogText.value = ""
+        errorMsg.value = ""
         showPermissionsDialog.value = false
     }
 
