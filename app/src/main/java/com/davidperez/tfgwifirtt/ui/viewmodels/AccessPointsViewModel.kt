@@ -28,7 +28,8 @@ data class AccessPointsUiState(
     val rttRangingResultsForExport: List<RangingResultWithTimestamps> = emptyList(),
     val errorMsg: String = "",
     val showPermissionsDialog: Boolean = false,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val isRTTRangingOngoing: Boolean = false
 )
 
 /**
@@ -51,6 +52,7 @@ class AccessPointsViewModel @Inject constructor(
         observeShowPermissionsDialog()
         observeIsLoading()
         observeUserSettings()
+        observeIsRTTRangingOngoing()
     }
 
     private fun observeUserSettings() {
@@ -149,6 +151,18 @@ class AccessPointsViewModel @Inject constructor(
         }
     }
 
+    private fun observeIsRTTRangingOngoing() {
+        viewModelScope.launch {
+            accessPointsRepository.observeIsRTTRangingOngoing().collect { isRTTRangingOngoingObserved ->
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        isRTTRangingOngoing = isRTTRangingOngoingObserved
+                    )
+                }
+            }
+        }
+    }
+
     /**
      * Refresh access points and update the UI state
      */
@@ -175,9 +189,9 @@ class AccessPointsViewModel @Inject constructor(
     /**
      * Start RTT ranging to the selected APs
      */
-    fun startRTTRanging(selectedForRTT: List<AccessPoint>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean, saveOnlyLastRttOperation: Boolean) {
+    fun startRTTRanging(selectedForRTT: List<AccessPoint>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean, saveOnlyLastRttOperation: Boolean, ignoreRttPeriod: Boolean) {
         viewModelScope.launch {
-            accessPointsRepository.startRTTRanging(selectedForRTT, performContinuousRttRanging, rttPeriod, rttInterval, saveRttResults, saveOnlyLastRttOperation)
+            accessPointsRepository.startRTTRanging(selectedForRTT, performContinuousRttRanging, rttPeriod, rttInterval, saveRttResults, saveOnlyLastRttOperation, ignoreRttPeriod)
         }
     }
 

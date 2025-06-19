@@ -37,6 +37,7 @@ interface UserSettingsRepository {
 
     suspend fun setRttInterval(value: Long)
 
+    suspend fun setIgnoreRttPeriod(value: Boolean)
 }
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_settings")
@@ -48,6 +49,7 @@ class UserSettingsRepositoryImpl @Inject constructor(private val application: Ap
         val PERFORM_CONTINUOUS_RTT_RANGING = booleanPreferencesKey("perform_single_rtt_request")
         val RTT_RANGING_PERIOD = longPreferencesKey("rtt_ranging_period")
         val INTERVAL_BETWEEN_RTT_REQUESTS = longPreferencesKey("interval_between_rtt_requests")
+        val IGNORE_RTT_RANGING_PERIOD = booleanPreferencesKey("ignore_rtt_ranging_period")
         val SAVE_RTT_RESULTS = booleanPreferencesKey("save_rtt_results")
         val SAVE_LAST_RTT_OPERATION_ONLY = booleanPreferencesKey("save_last_rtt_operation_only")
     }
@@ -58,6 +60,7 @@ class UserSettingsRepositoryImpl @Inject constructor(private val application: Ap
             performContinuousRttRanging = it[PERFORM_CONTINUOUS_RTT_RANGING] ?: false,
             rttPeriod =  it[RTT_RANGING_PERIOD] ?: 10,
             rttInterval = it[INTERVAL_BETWEEN_RTT_REQUESTS] ?: 100,
+            ignoreRttPeriod = it[IGNORE_RTT_RANGING_PERIOD] ?: false,
             saveRttResults = it[SAVE_RTT_RESULTS] ?: true,
             saveOnlyLastRttOperation = it[SAVE_LAST_RTT_OPERATION_ONLY] ?: false
         )
@@ -118,6 +121,16 @@ class UserSettingsRepositoryImpl @Inject constructor(private val application: Ap
         try {
             application.applicationContext.dataStore.edit {
                 it[INTERVAL_BETWEEN_RTT_REQUESTS] = value
+            }
+        } catch (e: IOException) {
+            showErrorMsg()
+        }
+    }
+
+    override suspend fun setIgnoreRttPeriod(value: Boolean) {
+        try {
+            application.applicationContext.dataStore.edit {
+                it[IGNORE_RTT_RANGING_PERIOD] = value
             }
         } catch (e: IOException) {
             showErrorMsg()

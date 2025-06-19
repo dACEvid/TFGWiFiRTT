@@ -69,7 +69,7 @@ interface AccessPointsRepository {
     fun observeErrorMsg(): Flow<String>
 
     /**
-     * Observe the loading status
+     * Observe the permissions dialog status
      */
     fun observeShowPermissionsDialog(): Flow<Boolean>
 
@@ -78,12 +78,14 @@ interface AccessPointsRepository {
      */
     fun observeIsLoading(): Flow<Boolean>
 
+    fun observeIsRTTRangingOngoing(): Flow<Boolean>
+
     /**
      * Create RTT ranging request for the selected APs
      */
     suspend fun createRTTRangingRequest(selectedForRTT: List<AccessPoint>, saveRttResults: Boolean, startTime: Long)
 
-    suspend fun startRTTRanging(selectedForRTT: List<AccessPoint>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean, saveOnlyLastRttOperation: Boolean)
+    suspend fun startRTTRanging(selectedForRTT: List<AccessPoint>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean, saveOnlyLastRttOperation: Boolean, ignoreRttPeriod: Boolean)
 
     suspend fun removeDialogs()
 
@@ -98,6 +100,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
     private val errorMsg = MutableStateFlow("")
     private val showPermissionsDialog = MutableStateFlow(false)
     private val isLoading = MutableStateFlow(false)
+    private val isRTTRangingOngoing = MutableStateFlow(false)
 
     var locationManager: LocationManager = this.application.getSystemService(Context.LOCATION_SERVICE) as LocationManager // Initialize LocationManager
     var wifiManager: WifiManager = this.application.getSystemService(Context.WIFI_SERVICE) as WifiManager // Initialize WifiManager
@@ -164,6 +167,8 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
 
     override fun observeIsLoading(): Flow<Boolean> = isLoading.asStateFlow()
 
+    override fun observeIsRTTRangingOngoing(): Flow<Boolean> = isRTTRangingOngoing.asStateFlow()
+
     @SuppressLint("MissingPermission")
     override suspend fun createRTTRangingRequest(selectedForRTT: List<AccessPoint>, saveRttResults: Boolean, startTime: Long) {
         wifiRTTManager = this.application.getSystemService(Context.WIFI_RTT_RANGING_SERVICE) as WifiRttManager // Initialize WifiRttManager
@@ -189,7 +194,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         })
     }
 
-    override suspend fun startRTTRanging(selectedForRTT: List<AccessPoint>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean, saveOnlyLastRttOperation: Boolean) {
+    override suspend fun startRTTRanging(selectedForRTT: List<AccessPoint>, performContinuousRttRanging: Boolean, rttPeriod: Long, rttInterval: Long, saveRttResults: Boolean, saveOnlyLastRttOperation: Boolean, ignoreRttPeriod: Boolean) {
         //wifiRTTManager = this.application.getSystemService(Context.WIFI_RTT_RANGING_SERVICE) as WifiRttManager // Initialize WifiRttManager
 
         // Check whether the device supports WiFi RTT
@@ -208,6 +213,7 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
             rttRangingResultsForExport.value = emptyList()
         }
 
+        isRTTRangingOngoing.value = true
         if (performContinuousRttRanging) {
             val endTime = System.currentTimeMillis() + rttPeriod
             while (System.currentTimeMillis() < endTime) {
@@ -217,6 +223,9 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         } else {
             createRTTRangingRequest(selectedForRTT, saveRttResults, System.currentTimeMillis())
         }
+        isRTTRangingOngoing.value = false
+        rttRangingResults.value = emptyList()
+
     }
 
     override suspend fun showPermissionsDialog() {

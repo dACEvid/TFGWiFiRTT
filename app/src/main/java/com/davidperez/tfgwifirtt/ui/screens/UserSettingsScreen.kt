@@ -91,6 +91,18 @@ fun SettingsScreen(
                     enabled = userSettingsUiState.userSettings.performContinuousRttRanging,
                     colors = mySliderColors()
                 )
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Ignore RTT Ranging period (only manual stop)")
+                    Spacer(Modifier.weight(1f))
+                    Checkbox(
+                        checked = userSettingsUiState.userSettings.ignoreRttPeriod,
+                        onCheckedChange = { userSettingsViewModel.setIgnoreRttPeriod(it) },
+                        colors = myCheckBoxColors()
+                    )
+                }
             }
         }
         item {

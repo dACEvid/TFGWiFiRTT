@@ -54,6 +54,12 @@ class UserSettingsViewModel @Inject constructor(
         }
     }
 
+    fun setIgnoreRttPeriod(value: Boolean) {
+        viewModelScope.launch {
+            userSettingsRepository.setIgnoreRttPeriod(value)
+        }
+    }
+
     fun setSaveRttResults(value: Boolean) {
         viewModelScope.launch {
             userSettingsRepository.setSaveRttResults(value)
