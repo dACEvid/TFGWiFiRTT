@@ -214,8 +214,10 @@ class AccessPointsRepositoryImpl @Inject constructor(private val application: Ap
         }
 
         isRTTRangingOngoing.value = true
+        // TODO: make use of the ignoreRttPeriod parameter
         if (performContinuousRttRanging) {
-            val endTime = System.currentTimeMillis() + rttPeriod
+            val effectiveRttPeriod = if (!ignoreRttPeriod) rttPeriod else 43200 // atm 12 hours is a hard limit
+            val endTime = System.currentTimeMillis() + effectiveRttPeriod
             while (System.currentTimeMillis() < endTime) {
                 createRTTRangingRequest(selectedForRTT, saveRttResults, System.currentTimeMillis())
                 delay(rttInterval) // Delay between requests

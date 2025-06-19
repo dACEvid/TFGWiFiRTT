@@ -100,6 +100,7 @@ fun SettingsScreen(
                     Checkbox(
                         checked = userSettingsUiState.userSettings.ignoreRttPeriod,
                         onCheckedChange = { userSettingsViewModel.setIgnoreRttPeriod(it) },
+                        enabled = userSettingsUiState.userSettings.performContinuousRttRanging,
                         colors = myCheckBoxColors()
                     )
                 }
